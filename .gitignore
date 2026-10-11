@@ -1,0 +1,13 @@
+# Personal medical data: never commit real reports, lab exports or generated workbooks.
+/results/
+*.pdf
+*.html
+*.xlsx
+
+# Build and IDE output
+build/
+.gradle/
+.kotlin/
+.idea/
+*.iml
+*.tmp
