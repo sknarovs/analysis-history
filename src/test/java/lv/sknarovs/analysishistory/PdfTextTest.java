@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.pdfbox.pdmodel.font.FontMapper;
 import org.apache.pdfbox.pdmodel.font.FontMappers;
 import org.junit.jupiter.api.Test;
@@ -110,6 +112,13 @@ class PdfTextTest {
 
         assertInstanceOf(BundledFontMapper.class, installed);
         assertSame(installed, FontMappers.instance());
+    }
+
+    @Test void switchesPdfBoxAndFontBoxLoggingOff() {
+        PdfText.useBundledFonts();
+
+        assertEquals(Level.OFF, Logger.getLogger("org.apache.pdfbox").getLevel());
+        assertEquals(Level.OFF, Logger.getLogger("org.apache.fontbox").getLevel());
     }
 
     @Test void ordersRowsTopToBottomAcrossPages(@TempDir Path dir) throws IOException {

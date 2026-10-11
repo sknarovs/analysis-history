@@ -21,4 +21,42 @@ application { mainClass = "lv.sknarovs.analysishistory.Main" }
 tasks.test {
     useJUnitPlatform()
     systemProperty("java.awt.headless", "true")
+    // PDFBox writes its system-font cache here instead of the home folder, but only if the folder exists. With the
+    // bundled font mapper installed first, PDFBox never scans system fonts, so a cache file here fails the build.
+    val fontCache = layout.buildDirectory.dir("pdfbox-fontcache").get().asFile
+    systemProperty("pdfbox.fontcache", fontCache.path)
+    doFirst {
+        fontCache.mkdirs()
+        fontCache.resolve(".pdfbox.cache").delete()
+    }
+    doLast {
+        val cache = fontCache.resolve(".pdfbox.cache")
+        if (cache.exists()) {
+            throw GradleException(
+                "A test made PDFBox scan the system fonts and write $cache. Create PDFBox fonts only after " +
+                    "PdfText.useBundledFonts() (TestPdf.create() calls it)."
+            )
+        }
+    }
+}
+
+graalvmNative {
+    toolchainDetection = false
+    metadataRepository { enabled = true }
+    binaries {
+        all {
+            resources.autodetect()
+            buildArgs.addAll("-Djava.awt.headless=true", "-H:+AddAllCharsets", "-march=compatibility")
+        }
+        named("main") {
+            imageName = "analysis-history"
+            if (providers.gradleProperty("static").isPresent) buildArgs.addAll("--static", "--libc=musl")
+        }
+    }
+}
+
+tasks.register<JavaExec>("generateSamples") {
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass = "lv.sknarovs.analysishistory.SampleReports"
+    args(layout.buildDirectory.dir("samples").get().asFile.path)
 }
