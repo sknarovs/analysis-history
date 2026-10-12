@@ -1,0 +1,16 @@
+# An invented Centrālā Laboratorija microbiology report: a section but no column header, so its rows are no results
+# table although they print text where values go. Tests render it to a PDF at 9 pt, so its cells keep wide gaps.
+150:TESTĒŠANAS PĀRSKATS / PABEIGTS
+48:Vārds, Uzvārds | 130:Jānis Paraugs
+48:Vecums | 130:01.01.2001 (25 g.) | 470:100000006
+48:Pers.kods | 130:010101-10000
+48:Diagnoze | 340:Reģistrēts | 430:11.05.2026 10:20
+48:Komentāri:
+267:*Mikrobioloģija
+48:Izmeklējamais materiāls | 213:Rīkles uztriepe
+48:Mikroskopija
+56:Leikocīti | 213:5 - 10 | 275:r.l.
+56:Epitēlija šūnas | 213:nedaudz
+48:Uzsējums | 213:Patogēnā mikroflora nav izdalīta
+48:Rezultātus pārbaudīja laboratorijas ārste ID 1
+48:Testēšanas metodes, mērījumu nenoteiktības … www.laboratorija.lv

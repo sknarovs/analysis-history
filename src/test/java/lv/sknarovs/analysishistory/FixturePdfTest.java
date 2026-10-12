@@ -12,7 +12,7 @@ class FixturePdfTest {
     private static final float TOLERANCE = 0.5f;
 
     @Test void renderedFixtureReadsBackIdentically(@TempDir Path dir) throws IOException {
-        for (String name : List.of("egl-sample", "clab-sample")) {
+        for (String name : List.of("egl-sample", "clab-sample", "clab-micro")) {
             List<Page> expected = Fixtures.load(name);
 
             List<Page> actual = PdfText.read(FixturePdf.write(expected, dir.resolve(name + ".pdf")));

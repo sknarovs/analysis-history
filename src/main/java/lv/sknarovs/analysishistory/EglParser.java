@@ -289,8 +289,8 @@ final class EglParser {
         }
 
         /**
-         * Adds a cell to the text of its zone after a space, or right after a unit that ends with {@code /}
-         * ({@code ml/min/} and {@code 1.73 m²}). An arrow sets the flag wherever it is.
+         * Adds a cell to the text of its zone, joined as {@link WrappedText#join} says. An arrow sets the flag wherever
+         * it is.
          */
         void add(Cell cell, Zones zones) {
             Flag arrow = ARROWS.get(cell.text());
@@ -299,8 +299,7 @@ final class EglParser {
                 return;
             }
             Zone zone = zones.of(cell.x());
-            texts.merge(zone, cell.text(),
-                    (text, more) -> text + (zone == Zone.UNIT && text.endsWith("/") ? "" : " ") + more);
+            texts.merge(zone, cell.text(), (text, more) -> WrappedText.join(text, more, zone == Zone.UNIT));
         }
 
         boolean hasValue() {
