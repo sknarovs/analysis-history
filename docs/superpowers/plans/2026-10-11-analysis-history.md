@@ -410,20 +410,20 @@ then package `dist/analysis-history-${target}${EXE}` plus `.sha256` (`sha256sum`
   - `sealed interface CatalogMatch` with `Matched(CatalogTest test, BigDecimal factor)`, `Unknown()`, `UnitMismatch(CatalogTest test, String expectedUnit, String printedUnit)`
   - `final class TestCatalog`: `static TestCatalog bundled()`, `static TestCatalog parse(String text)` (throws `IllegalArgumentException` with line number on malformed lines, duplicate aliases, or a factor that is not a power of ten), `CatalogMatch match(Lab lab, Specimen specimen, String name, String unit)`, `List<String> sections()`, `static Specimen specimenOf(String section)`, `static String normaliseName(String)`, `static String normaliseUnit(String)`
 
-**Rules (§5.6):** line syntax `<name> | <unit> | <Lab label>: <printed name> [(<printed unit>[ ×<factor>])] | …`; `#` comments; `[Section]` headers. `normaliseName`: lowercase, collapse whitespace, remove spaces around `-` and `,`. `normaliseUnit`: remove spaces; `µ`/`μ` → `u`; lowercase; `10x9`, `10e9`, `10⁹` → `10^9`; `10x12`, `10e12`, `10¹²` → `10^12`; `m²` → `m2`; then equivalences `ery/ul` → `/ul`, `leu/ul` → `/ul`. Expected unit = alias printed unit if given, else the test's unit.
+**Rules (§5.6):** line syntax `<name> | <unit> | <Lab label>: <printed name>`, optionally followed by `[<printed unit>]` or `[<printed unit> ×<factor>]` (square brackets, because printed names themselves contain parentheses, e.g. `25-OH-vitamīns D (D3+D2)`, `Asins grupa (gelkaršu met.)`), aliases separated by ` | `; `#` comments; `[Section]` headers. `normaliseName`: lowercase, collapse whitespace, remove spaces around `-` and `,`. `normaliseUnit`: remove spaces; `µ`/`μ` → `u`; lowercase; `10x9`, `10e9`, `10⁹` → `10^9`; `10x12`, `10e12`, `10¹²` → `10^12`; `m²` → `m2`; then equivalences `ery/ul` → `/ul`, `leu/ul` → `/ul`. Expected unit = alias printed unit if given, else the test's unit.
 
 - [ ] **Step 1: Write `catalog.txt`** with exactly these lines (covers every test in the 28 reports; names only):
 
 ```
-# <display name> | <unit> | <lab>: <name as printed> [(<printed unit> ×<factor>)] | …
+# <display name> | <unit> | <lab>: <name as printed> [<printed unit> ×<factor>] | …
 # Sections imply the specimen: Urīna analīze → urine, Urīna mikroskopija → urine sediment, others → blood.
 [Hematoloģija]
 Eritrocīti | 10¹²/L | EGL: Eritrocīti | CLab: Eritrocīti
-Hemoglobīns | g/L | EGL: Hemoglobīns | CLab: Hemoglobīns (g/dL ×10)
+Hemoglobīns | g/L | EGL: Hemoglobīns | CLab: Hemoglobīns [g/dL ×10]
 Hematokrīts | % | EGL: Hematokrīts | CLab: Hematokrīts
 MCV - vid. eritrocītu tilpums | fL | EGL: MCV- vid. Er tilpums | CLab: MCV Eritroc.vid.tilp.
 MCH - vid. Hb saturs eritrocītā | pg | EGL: MCH-vidējā Hb konc. | CLab: MCH Vid.Hb saturs er.
-MCHC - vid. Hb koncentrācija | g/L | EGL: MCHC-vid. Hb konc. Er | CLab: MCHC Vid.Hb konc.er. (g/dL ×10)
+MCHC - vid. Hb koncentrācija | g/L | EGL: MCHC-vid. Hb konc. Er | CLab: MCHC Vid.Hb konc.er. [g/dL ×10]
 RDW - eritrocītu sadalījums | % | EGL: RDW-Er. sadalījums | CLab: RDW Eritr. anizocit.
 Trombocīti | 10⁹/L | EGL: Trombocīti | CLab: Trombocīti
 MPV - vid. trombocītu tilpums | fL | EGL: MPV-vid. tr. tilpums
@@ -522,7 +522,7 @@ Sāļi |  | EGL: Sāļi
 Baktērijas |  | EGL: Baktērijas
 ```
 
-(If Task 11's real-data run shows a printed unit that differs from this file, e.g. a CLab test printed without a unit, fix the alias with `(<printed unit>)` — that is what the unit check is for.)
+(If Task 11's real-data run shows a printed unit that differs from this file, e.g. a CLab test printed without a unit, fix the alias with `[<printed unit>]` — that is what the unit check is for.)
 
 - [ ] **Step 2: Failing tests**
 
