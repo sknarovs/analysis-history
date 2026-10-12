@@ -78,6 +78,16 @@ class EglParserTest {
         assertEquals(List.of(), report.warnings());
     }
 
+    @Test void indexesStartOnlyAtTheLeftMargin() throws ReportFormatException {
+        Report report = EglParser.parse(FILE, Fixtures.parse(TOP + """
+                28:1/1 A | 62:Ērču encefalīta vīrusa IgG | 179:Pozitīvs
+                ~179:1/160
+                """));
+
+        assertEquals(new Text("Pozitīvs 1/160"), result(report, "Ērču encefalīta vīrusa IgG").value());
+        assertEquals(List.of(), report.warnings());
+    }
+
     @Test void separatesUrineStripFromMicroscopy() throws ReportFormatException {
         List<Result> leukocytes = results(parse("egl-urine"), "Leikocīti");
 
@@ -153,20 +163,47 @@ class EglParserTest {
         assertEquals(List.of(), report.warnings());
     }
 
+    @Test void warnsAboutPreviousResultsItCannotRead() throws ReportFormatException {
+        for (String previous : List.of("139 / 14.10.2025", "139 / 31.02.25", "139 / 32.01.25")) {
+            Report report = EglParser.parse(FILE, Fixtures.parse(TOP
+                    + "28:1/1 A | 62:Hemoglobīns | 179:150 | 269:132 - 175 | 340:g/L | 439:" + previous));
+
+            assertNull(result(report, "Hemoglobīns").previous(), previous);
+            assertEquals(List.of(new RowWarning(1, "1/1 A | Hemoglobīns | 150 | 132 - 175 | g/L | " + previous)),
+                    report.warnings(), previous);
+        }
+    }
+
+    @Test void warnsAboutIndexRowsWithoutValueThatPrintMoreThanAName() throws ReportFormatException {
+        Report report = EglParser.parse(FILE, Fixtures.parse(TOP + """
+                28:1/3 A | 62:Hemoglobīns | 269:132 - 175 | 340:g/L
+                28:2/3 A | 62:Brīvais T4 | 249:ñ
+                28:3/3 | 62:Rezultātu novērtējums
+                """));
+
+        assertEquals(List.of(), report.results());
+        assertEquals(List.of(new RowWarning(1, "1/3 A | Hemoglobīns | 132 - 175 | g/L"),
+                new RowWarning(1, "2/3 A | Brīvais T4 | ñ")), report.warnings());
+    }
+
     @Test void contentEndsForTheWholeReportAtTheFirstFooterRow() throws ReportFormatException {
         for (String footer : List.of("85:Pārskata beigas", "28:Materiāls ņemts | 160:05.03.26,07:50",
                 "28:# - testēšanas metode nav akreditēta")) {
             Report report = EglParser.parse(FILE, Fixtures.parse(TOP + """
-                    28:1/2 A | 62:Hemoglobīns | 179:150 | 269:132 - 175 | 340:g/L
+                    28:1/4 A | 62:Hemoglobīns | 179:150 | 269:132 - 175 | 340:g/L
                     %s
                     179:12.3
                     === page
                     179:Rezultāts | 269:References | 340:Vienības | 403:Iepr.rezult./datums
-                    28:2/2 A | 62:Leikocīti | 179:5.20 | 269:4.0 - 9.8 | 340:10x9/L
+                    28:2/4 A | 62:Leikocīti | 179:5.20 | 269:4.0 - 9.8 | 340:10x9/L
+                    28:3/4 A | 62:Eritrocīti | 269:4.50 - 5.90 | 340:10x12/L
+                    28:4/4 | 62:Rezultātu novērtējums
                     """.formatted(footer)));
 
             assertEquals(List.of("Hemoglobīns"), names(report), footer);
-            assertEquals(List.of(), report.warnings(), footer);
+            // Nothing after the end is read, but index rows printing result data there are reported, not lost.
+            assertEquals(List.of(new RowWarning(2, "2/4 A | Leikocīti | 5.20 | 4.0 - 9.8 | 10x9/L"),
+                    new RowWarning(2, "3/4 A | Eritrocīti | 4.50 - 5.90 | 10x12/L")), report.warnings(), footer);
         }
     }
 
@@ -184,7 +221,8 @@ class EglParserTest {
 
     @Test void rejectsReportWithoutReadableRegistrationDate() {
         for (String registered : List.of("28:Reģistrēts laboratorijā",
-                "28:Reģistrēts laboratorijā | 160:05.03.2026 08:15")) {
+                "28:Reģistrēts laboratorijā | 160:05.03.2026 08:15",
+                "28:Reģistrēts laboratorijā | 160:31.02.26,08:15")) {
             List<Page> pages = Fixtures.parse("""
                     28:Testēšanas pārskats Nr. 20000001#1000 // pabeigts
                     28:Personas kods | 160:010101-10000

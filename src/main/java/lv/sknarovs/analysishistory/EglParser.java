@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -24,17 +25,21 @@ import lv.sknarovs.analysishistory.Zones.Zone;
  * previous result;
  * <li>bold lines indented in the name column are sections, and the line {@code Mikroskopija} starts the urine sediment
  * rows; both end the result above them;
- * <li>other lines indented past the result's name are notes, sub-headings or interpretation tables, and are skipped;
- * <li>any other line with text where results go becomes a {@link RowWarning}.
+ * <li>other lines indented past the result's name are notes, sub-headings or interpretation tables, and are skipped.
  * </ul>
+ * Nothing printed in the result columns is dropped silently. A {@link RowWarning} reports any other line with text
+ * there, an index row that prints more than its name but no value, a previous result that cannot be read, and an
+ * index row that prints anything there after the end of the report.
  */
 final class EglParser {
     private static final Pattern NUMBER = Pattern.compile("Testēšanas pārskats Nr\\. (\\d+)#");
-    /** The two-digit years of both dates are read as 20yy. */
-    private static final DateTimeFormatter REGISTERED = DateTimeFormatter.ofPattern("dd.MM.yy,HH:mm");
-    private static final DateTimeFormatter PREVIOUS_DATE = DateTimeFormatter.ofPattern("dd.MM.yy");
-    /** A result's index, then its sample code (group 1) when it has one. */
-    private static final Pattern INDEX = Pattern.compile("\\d+/\\d+(?: ([AU]))?");
+    /** Two-digit years are read as 20yy; dates that do not exist, such as 31.02.25, are rejected, not adjusted. */
+    private static final DateTimeFormatter REGISTERED =
+            DateTimeFormatter.ofPattern("dd.MM.uu,HH:mm").withResolverStyle(ResolverStyle.STRICT);
+    private static final DateTimeFormatter PREVIOUS_DATE =
+            DateTimeFormatter.ofPattern("dd.MM.uu").withResolverStyle(ResolverStyle.STRICT);
+    /** A result's index, then its sample code when it has one. */
+    private static final Pattern INDEX = Pattern.compile("\\d+/\\d+(?: [AU])?");
     private static final Pattern PAGE_NUMBER = Pattern.compile("\\d+/\\d+");
     /** A previous result: its value (group 1) and date (group 2). */
     private static final Pattern PREVIOUS = Pattern.compile("(.+) / (\\d\\d\\.\\d\\d\\.\\d\\d)");
@@ -87,6 +92,7 @@ final class EglParser {
     }
 
     private void readTable(List<Page> pages) {
+        boolean ended = false;
         for (Page page : pages) {
             Zones zones = null;
             for (Row row : page.rows()) {
@@ -99,23 +105,28 @@ final class EglParser {
                 if (zones == null || isFurniture(row)) {
                     continue;
                 }
-                if (isFooter(row)) {
+                if (ended) {
+                    // Nothing after the end is read, but a result row there is reported rather than lost.
+                    if (startsWithIndex(row) && reachesResultColumns(row, zones)) {
+                        warnings.add(new RowWarning(page.number(), row.text()));
+                    }
+                } else if (isFooter(row)) {
                     close();
-                    return;
+                    ended = true;
+                } else {
+                    readRow(page.number(), row, zones);
                 }
-                readRow(page.number(), row, zones);
             }
         }
         close();
     }
 
     private void readRow(int page, Row row, Zones zones) {
-        Cell first = row.first();
-        Matcher index = INDEX.matcher(first.text());
-        if (first.x() < INDEX_END && index.matches()) {
-            start(row, index.group(1), zones);
+        if (startsWithIndex(row)) {
+            start(page, row, zones);
             return;
         }
+        Cell first = row.first();
         boolean oneCell = row.cells().size() == 1;
         boolean inNameColumn = zones.of(first.x()) == Zone.NAME;
         if (oneCell && first.bold() && inNameColumn && first.x() > SECTION_X) {
@@ -138,21 +149,26 @@ final class EglParser {
             row.cells().forEach(cell -> open.add(cell, zones));
             return;
         }
-        if (row.cells().stream().anyMatch(cell -> zones.of(cell.x()) != Zone.NAME)) {
+        if (reachesResultColumns(row, zones)) {
             warnings.add(new RowWarning(page, row.text()));
         }
     }
 
-    /** Opens the result of an index row; a row without a value ({@code Rezultātu novērtējums}) leaves none open. */
-    private void start(Row row, String code, Zones zones) {
+    /**
+     * Opens the result of an index row. A row without a value opens none: the closing {@code Rezultātu novērtējums}
+     * row prints only a name, and any row that prints more is reported, as what it prints would be lost.
+     */
+    private void start(int page, Row row, Zones zones) {
         close();
         List<Cell> cells = row.cells().subList(1, row.cells().size());
         float nameX = cells.stream().filter(cell -> zones.of(cell.x()) == Zone.NAME).findFirst().map(Cell::x)
                 .orElse(NAME_X);
-        OpenResult result = new OpenResult(section, group, specimen(code), nameX);
+        OpenResult result = new OpenResult(page, row.text(), section, group, specimen(sampleCode(row)), nameX);
         cells.forEach(cell -> result.add(cell, zones));
         if (result.hasValue()) {
             open = result;
+        } else if (reachesResultColumns(row, zones)) {
+            warnings.add(new RowWarning(page, row.text()));
         }
     }
 
@@ -167,12 +183,36 @@ final class EglParser {
         return code.equals("U") ? Specimen.URINE : Specimen.BLOOD;
     }
 
-    /** Adds the open result to the results, once no further line can wrap it. */
+    /**
+     * Adds the open result to the results, once no further line can wrap it. A previous result that is printed but
+     * cannot be read is left out, and the result's row is reported.
+     */
     private void close() {
         if (open != null) {
-            results.add(open.result());
+            Result result = open.result();
+            results.add(result);
+            if (result.previous() == null && open.printsPrevious()) {
+                warnings.add(new RowWarning(open.page, open.rowText));
+            }
             open = null;
         }
+    }
+
+    private static boolean startsWithIndex(Row row) {
+        Cell first = row.first();
+        return first.x() < INDEX_END && INDEX.matcher(first.text()).matches();
+    }
+
+    /** The sample code after a row's index ({@code A} or {@code U}), or null when it has none. */
+    private static String sampleCode(Row row) {
+        String index = row.first().text();
+        int space = index.indexOf(' ');
+        return space < 0 ? null : index.substring(space + 1);
+    }
+
+    /** Whether any cell of the row starts right of the name column, where values, units and ranges go. */
+    private static boolean reachesResultColumns(Row row, Zones zones) {
+        return row.cells().stream().anyMatch(cell -> zones.of(cell.x()) != Zone.NAME);
     }
 
     /** The page number ({@code 1/2}) and the header's second line, wherever they fall between results. */
@@ -224,8 +264,13 @@ final class EglParser {
         return Optional.empty();
     }
 
-    /** A result being read: the texts of its row and of the lines that wrap it, by zone, and its arrow. */
+    /**
+     * A result being read: the texts of its row and of the lines that wrap it, by zone, and its arrow. {@code page}
+     * and {@code rowText} are those of the row that starts it.
+     */
     private static final class OpenResult {
+        private final int page;
+        private final String rowText;
         private final String section;
         private final String group;
         private final Specimen specimen;
@@ -234,7 +279,9 @@ final class EglParser {
         private final Map<Zone, String> texts = new EnumMap<>(Zone.class);
         private Flag flag = Flag.NONE;
 
-        OpenResult(String section, String group, Specimen specimen, float nameX) {
+        OpenResult(int page, String rowText, String section, String group, Specimen specimen, float nameX) {
+            this.page = page;
+            this.rowText = rowText;
             this.section = section;
             this.group = group;
             this.specimen = specimen;
@@ -260,19 +307,27 @@ final class EglParser {
             return texts.containsKey(Zone.VALUE);
         }
 
+        boolean printsPrevious() {
+            return !text(Zone.PREVIOUS).isBlank();
+        }
+
         Result result() {
             return new Result(section, group, specimen, text(Zone.NAME), ResultValue.parse(text(Zone.VALUE)),
                     text(Zone.UNIT), ReferenceRange.parse(text(Zone.RANGE)), flag, previous());
         }
 
-        /** The previous result, printed {@code <value> / dd.mm.yy}; null when there is none in that form. */
+        /** The previous result, printed {@code <value> / dd.mm.yy}; null when none is printed or it cannot be read. */
         private Previous previous() {
             Matcher previous = PREVIOUS.matcher(text(Zone.PREVIOUS));
             if (!previous.matches()) {
                 return null;
             }
-            return new Previous(ResultValue.parse(previous.group(1)), LocalDate.parse(previous.group(2), PREVIOUS_DATE),
-                    null);
+            try {
+                return new Previous(ResultValue.parse(previous.group(1)),
+                        LocalDate.parse(previous.group(2), PREVIOUS_DATE), null);
+            } catch (DateTimeParseException e) {
+                return null;
+            }
         }
 
         private String text(Zone zone) {
