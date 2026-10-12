@@ -29,6 +29,11 @@ sealed interface ReferenceRange {
         public String display() {
             return lo.toPlainString() + EN_DASH + hi.toPlainString();
         }
+
+        @Override
+        public boolean sameAs(ReferenceRange other) {
+            return other instanceof Between that && lo.compareTo(that.lo) == 0 && hi.compareTo(that.hi) == 0;
+        }
     }
 
     /** Up to {@code limit}: {@code <41} excludes it, {@code ≤3.9} includes it. */
@@ -46,6 +51,11 @@ sealed interface ReferenceRange {
         @Override
         public String display() {
             return (inclusive ? "≤" : "<") + limit.toPlainString();
+        }
+
+        @Override
+        public boolean sameAs(ReferenceRange other) {
+            return other instanceof Below that && inclusive == that.inclusive && limit.compareTo(that.limit) == 0;
         }
     }
 
@@ -65,10 +75,17 @@ sealed interface ReferenceRange {
         public String display() {
             return (inclusive ? "≥" : ">") + limit.toPlainString();
         }
+
+        @Override
+        public boolean sameAs(ReferenceRange other) {
+            return other instanceof Above that && inclusive == that.inclusive && limit.compareTo(that.limit) == 0;
+        }
     }
 
     /** A range in words ({@code negatīvs}, {@code Norma}), shown as printed and never used to flag. */
     record TextReference(String text) implements ReferenceRange {
+        private static final Pattern WHITE_SPACE = Pattern.compile("\\s+");
+
         @Override
         public ReferenceRange scaled(BigDecimal factor) {
             return this;
@@ -77,6 +94,16 @@ sealed interface ReferenceRange {
         @Override
         public String display() {
             return text;
+        }
+
+        @Override
+        public boolean sameAs(ReferenceRange other) {
+            return other instanceof TextReference that
+                    && withoutWhiteSpace(text).equalsIgnoreCase(withoutWhiteSpace(that.text));
+        }
+
+        private static String withoutWhiteSpace(String text) {
+            return WHITE_SPACE.matcher(text).replaceAll("");
         }
     }
 
@@ -90,6 +117,11 @@ sealed interface ReferenceRange {
         @Override
         public String display() {
             return "";
+        }
+
+        @Override
+        public boolean sameAs(ReferenceRange other) {
+            return other instanceof None;
         }
     }
 
@@ -152,6 +184,12 @@ sealed interface ReferenceRange {
 
     /** The printed form with a dot as the decimal separator, bounds separated by an en dash ({@code 4.0–9.8}). */
     String display();
+
+    /**
+     * Whether both are the same range: of one kind, with equal bounds by value ({@code 4.0} is {@code 4.00}) that are
+     * equally inclusive, or the same text ignoring case and white space.
+     */
+    boolean sameAs(ReferenceRange other);
 
     private Optional<Flag> judgeNumber(BigDecimal number) {
         return switch (this) {

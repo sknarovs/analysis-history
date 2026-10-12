@@ -191,8 +191,39 @@ class ReferenceRangeTest {
         assertFalse(ReferenceRange.parse("-").isNumeric());
     }
 
+    @Test void sameAsComparesRangesByValue() {
+        assertTrue(same("4.0 - 9.8", "4.00 - 9.80"));
+        assertTrue(same("(62.0 - 106.0)", "62-106"));
+        assertFalse(same("62 - 106", "62 - 105"));
+        assertFalse(same("61 - 106", "62 - 106"));
+        assertTrue(same("<5.0", "< 5"));
+        assertTrue(same("≥1.0", "≥1"));
+        assertFalse(same("<5", "<6"));
+        assertFalse(same(">90", ">60"));
+        assertFalse(same("<5", "≤5"));
+        assertFalse(same(">90", "≥90"));
+        assertFalse(same("<5", ">5"));
+        assertFalse(same("<5", "0 - 5"));
+        assertTrue(same("negatīvs", "Negatīvs"));
+        assertTrue(same("nav atrastas", "(Nav  atrastas)"));
+        assertTrue(same("nav atrastas", "navatrastas"));
+        assertFalse(same("negatīvs", "pozitīvs"));
+        assertTrue(same("-", ""));
+        assertFalse(same("-", "negatīvs"));
+        assertFalse(same("", "4.5 - 5.9"));
+        assertFalse(same("4.5 - 5.9", "4.5 - 5.9 mmol/L"));
+        assertTrue(ReferenceRange.parse("(13.2 - 17.5)").scaled(TEN).sameAs(ReferenceRange.parse("132 - 175")));
+    }
+
     private static void assertJudged(Optional<Flag> expected, String range, String value) {
         assertEquals(expected, ReferenceRange.parse(range).judge(ResultValue.parse(value)),
                 "'" + value + "' against '" + range + "'");
+    }
+
+    /** Whether the printed ranges are the same, which must not depend on which one is asked. */
+    private static boolean same(String a, String b) {
+        boolean same = ReferenceRange.parse(a).sameAs(ReferenceRange.parse(b));
+        assertEquals(same, ReferenceRange.parse(b).sameAs(ReferenceRange.parse(a)), "'" + b + "' vs '" + a + "'");
+        return same;
     }
 }
