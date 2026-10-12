@@ -241,7 +241,11 @@ class ClabParserTest {
             Report report = ClabParser.parse(FILE, Fixtures.parse(TOP + """
                     46:Hemoglobīns | 213:14.1 | 278:g/dL | 349:(13.2 - 17.5)
                     %s
+                    # Below it nothing is read, but a row that would start a result is reported; footer rows and
+                    # other text are not.
                     46:Leikocīti | 213:5,40 | 278:10e9/L | 349:(4.00 - 9.80)
+                    48:Pārskata sastādīšanas datums | 213:17.03.2026
+                    300:1/2
                     === page
                     48:Vecums | 130:01.01.2001 (25 g.) | 470:100000001
                     48:Komentāri:
@@ -250,13 +254,14 @@ class ClabParserTest {
 
             // The next page's results start below its patient block, in the columns of the last header.
             assertEquals(List.of("Hemoglobīns", "Trombocīti"), names(report), footer);
-            assertEquals(List.of(), report.warnings(), footer);
+            assertEquals(List.of(new RowWarning(1, "Leikocīti | 5,40 | 10e9/L | (4.00 - 9.80)")), report.warnings(),
+                    footer);
         }
     }
 
-    @Test void rejectsReportWithoutNumber() {
-        // Six to ten digits right of x 297 count only above the first page's Komentāri: row.
-        List<Page> pages = Fixtures.parse("""
+    @Test void rejectsReportWithoutALoneNumber() {
+        // Six to ten digits right of x 297 count only above the first page's Komentāri: row, and only once.
+        for (String patientBlock : List.of("""
                 48:Vecums | 130:100000001 | 470:12345 | 520:12345678901
                 48:Diagnoze | 340:Reģistrēts | 430:17.03.2026 08:40
                 48:Komentāri:
@@ -264,9 +269,25 @@ class ClabParserTest {
                 === page
                 48:Vecums | 130:01.01.2001 (25 g.) | 470:100000001
                 48:Komentāri:
-                """);
+                """, """
+                48:Vecums | 130:01.01.2001 (25 g.) | 470:100000001
+                48:Diagnoze | 340:Reģistrēts | 430:17.03.2026 08:40 | 520:100000002
+                48:Komentāri:
+                """)) {
+            List<Page> pages = Fixtures.parse(patientBlock);
 
-        assertThrows(ReportFormatException.class, () -> ClabParser.parse(FILE, pages));
+            assertThrows(ReportFormatException.class, () -> ClabParser.parse(FILE, pages), patientBlock);
+        }
+    }
+
+    @Test void aNumberPrintedTwiceIsOneNumber() throws ReportFormatException {
+        Report report = ClabParser.parse(FILE, Fixtures.parse("""
+                48:Vecums | 130:01.01.2001 (25 g.) | 470:100000001
+                48:Diagnoze | 340:Reģistrēts | 430:17.03.2026 08:40 | 520:100000001
+                48:Komentāri:
+                """));
+
+        assertEquals("100000001", report.number());
     }
 
     @Test void rejectsReportWithoutReadableRegistrationDate() {

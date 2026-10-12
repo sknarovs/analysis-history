@@ -27,11 +27,11 @@ import lv.sknarovs.analysishistory.Zones.Zone;
  * <li>a line of one cell that starts in the name column and runs on into the value column is a note, and is skipped.
  * </ul>
  * Before the first column header only sections are read, so a report without one (microbiology) has no results. A
- * {@link RowWarning} reports any other row with text right of the name column, and a result whose previous result
- * cannot be read (the result itself is kept).
+ * {@link RowWarning} reports any other row with text right of the name column, a row below a page's first footer row
+ * that would start a result, and a result whose previous result cannot be read (the result itself is kept).
  */
 final class ClabParser {
-    /** The report number: the six to ten digits printed right of {@link #NUMBER_X} in the patient block. */
+    /** The report number: the lone cell of six to ten digits right of {@link #NUMBER_X} in the patient block. */
     private static final Pattern NUMBER = Pattern.compile("\\d{6,10}");
     /** A date and time as CLab prints them; the hour may have one digit ({@code 14.07.2025 9:08}). */
     private static final Pattern DATE_TIME = Pattern.compile("\\d\\d\\.\\d\\d\\.\\d{4} \\d{1,2}:\\d\\d");
@@ -86,11 +86,31 @@ final class ClabParser {
 
     private void readTable(List<Page> pages) {
         for (Page page : pages) {
-            for (Row row : resultRows(page)) {
-                readRow(page.number(), row);
-            }
+            readPage(page);
             // No result wraps onto the next page.
             close();
+        }
+    }
+
+    /**
+     * Reads a page's results: the rows below its {@code Komentāri:} row, which ends the patient block, up to its first
+     * footer row; a page without a {@code Komentāri:} row has none. Below the first footer row nothing is read, but a
+     * row that would start a result is reported rather than lost; further footer rows are not.
+     */
+    private void readPage(Page page) {
+        boolean started = false;
+        boolean ended = false;
+        for (Row row : page.rows()) {
+            if (!started) {
+                started = startsWith(row, COMMENTS);
+            } else if (isFooter(row)) {
+                close();
+                ended = true;
+            } else if (!ended) {
+                readRow(page.number(), row);
+            } else if (zones != null && startsResult(row)) {
+                warnings.add(new RowWarning(page.number(), row.text()));
+            }
         }
     }
 
@@ -121,7 +141,7 @@ final class ClabParser {
         Cell first = row.first();
         if (isOneCellInNameColumn(row) && first.xEnd() < zones.value()) {
             group = first.text();
-        } else if (inNameColumn(first) && prints(row, Field.VALUE)) {
+        } else if (startsResult(row)) {
             open = new OpenResult(page, row, section, group, specimen(), zones);
         } else if (reachesResultColumns(row)) {
             warnings.add(new RowWarning(page, row.text()));
@@ -134,6 +154,11 @@ final class ClabParser {
      */
     private boolean wraps(Row row) {
         return row.baseline() - open.baseline <= WRAP_GAP && !isNote(row) && !prints(row, Field.RANGE);
+    }
+
+    /** Whether {@code row} starts a result: its first cell is in the name column, and it prints a value. */
+    private boolean startsResult(Row row) {
+        return inNameColumn(row.first()) && prints(row, Field.VALUE);
     }
 
     /** A note: one cell that starts in the name column and runs on into the value column, as sentences do. */
@@ -184,23 +209,8 @@ final class ClabParser {
         return row.cells().size() == 1 && cell.bold() && cell.x() >= SECTION_X;
     }
 
-    /**
-     * The rows of a page's results: those below its {@code Komentāri:} row, which ends the patient block, up to its
-     * first footer row. A page without a {@code Komentāri:} row has none.
-     */
-    private static List<Row> resultRows(Page page) {
-        List<Row> rows = new ArrayList<>();
-        boolean started = false;
-        for (Row row : page.rows()) {
-            if (!started) {
-                started = startsWith(row, COMMENTS);
-            } else if (FOOTERS.stream().anyMatch(footer -> startsWith(row, footer))) {
-                break;
-            } else {
-                rows.add(row);
-            }
-        }
-        return rows;
+    private static boolean isFooter(Row row) {
+        return FOOTERS.stream().anyMatch(footer -> startsWith(row, footer));
     }
 
     /** The rows above the first page's {@code Komentāri:} row; the whole page when it has none. */
@@ -219,13 +229,24 @@ final class ClabParser {
         return row.first().text().startsWith(prefix);
     }
 
+    /**
+     * The report number. The block prints it once, or the same number twice; two different numbers leave it unknown.
+     * They are not named in the message, as either could be personal (a phone number).
+     */
     private static String number(List<Row> patientBlock) throws ReportFormatException {
-        return patientBlock.stream()
+        List<String> numbers = patientBlock.stream()
                 .flatMap(row -> row.cells().stream())
                 .filter(cell -> cell.x() > NUMBER_X && NUMBER.matcher(cell.text()).matches())
                 .map(Cell::text)
-                .findFirst()
-                .orElseThrow(() -> new ReportFormatException("no report number (6 to 10 digits above Komentāri:)"));
+                .distinct()
+                .toList();
+        if (numbers.isEmpty()) {
+            throw new ReportFormatException("no report number (6 to 10 digits above Komentāri:)");
+        }
+        if (numbers.size() > 1) {
+            throw new ReportFormatException("more than one report number (6 to 10 digits above Komentāri:)");
+        }
+        return numbers.get(0);
     }
 
     private static LocalDateTime registered(List<Row> patientBlock) throws ReportFormatException {
