@@ -7,9 +7,9 @@ history, shipped as a GraalVM native binary. Design: `docs/superpowers/specs/202
 
 - **Run tests** (JUnit, no network, works on the host): `./gradlew test`
 - **Run on the JVM**: `./gradlew run --args="results -o /tmp/out.xlsx"`
-- **Native binary + native tests** need GraalVM CE 25 and gcc, so run them in the Fedora toolbox. On this host a linuxbrew
-  `podman` shadows `/usr/bin/podman`, so prefix `PATH=/usr/bin:$PATH`:
-  `PATH=/usr/bin:$PATH toolbox run -c fedora-toolbox-44 bash -c 'cd /var/home/andrejs/Work/blood-analysis && export JAVA_HOME=$HOME/.sdkman/candidates/java/25.4.4.1+1-graalce GRAALVM_HOME=$HOME/.sdkman/candidates/java/25.4.4.1+1-graalce && ./gradlew nativeTest nativeCompile'`
+- **Native binary + native tests** need GraalVM CE 25 and gcc, so run them in the Fedora toolbox (if `toolbox run` fails
+  with "failed to get the Podman version", a linuxbrew `podman` is shadowing `/usr/bin/podman`: `brew unlink podman`):
+  `toolbox run -c fedora-toolbox-44 bash -c 'cd /var/home/andrejs/Work/blood-analysis && export JAVA_HOME=$HOME/.sdkman/candidates/java/25.4.4.1+1-graalce GRAALVM_HOME=$HOME/.sdkman/candidates/java/25.4.4.1+1-graalce && ./gradlew nativeTest nativeCompile'`
   (a non-login shell does not load SDKMAN, hence the explicit exports). Output: `build/native/nativeCompile/analysis-history`.
   Add `-Pstatic` for the fully static musl build CI uses for linux-x86_64 (needs musl tooling).
 - **Generate sample PDFs** for smoke tests: `./gradlew generateSamples` (writes `build/samples/`).
