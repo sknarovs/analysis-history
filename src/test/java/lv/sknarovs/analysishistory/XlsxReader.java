@@ -52,9 +52,14 @@ final class XlsxReader {
         private final Map<String, String> notes;
         private final Map<String, String> links;
         private final String frozenTopLeft;
+        private final Map<Integer, Double> widths;
+        private final Map<Integer, Integer> outlines;
 
         private Sheet(Map<String, CellValue> cells, Styles styles, Map<String, String> notes,
-                Map<String, String> links, String frozenTopLeft) {
+                Map<String, String> links, String frozenTopLeft, Map<Integer, Double> widths,
+                Map<Integer, Integer> outlines) {
+            this.widths = widths;
+            this.outlines = outlines;
             this.cells = cells;
             this.styles = styles;
             this.notes = notes;
@@ -105,6 +110,20 @@ final class XlsxReader {
         /** The first cell below and right of the frozen panes, for example {@code "D4"}; {@code null} if none. */
         String frozenTopLeft() {
             return frozenTopLeft;
+        }
+
+        /** The outline (grouping) level of a 1-based row; 0 when the row is not grouped. */
+        int outlineLevel(int row) {
+            return outlines.getOrDefault(row, 0);
+        }
+
+        /** The width of a column given by letters such as {@code "A"}, in characters; {@code null} if not set. */
+        Double width(String column) {
+            int index = 0;
+            for (char letter : column.toCharArray()) {
+                index = index * 26 + (letter - 'A' + 1);
+            }
+            return widths.get(index);
         }
 
         private int style(String ref) {
@@ -167,7 +186,19 @@ final class XlsxReader {
                 frozenTopLeft = pane.getAttribute("topLeftCell");
             }
         }
-        return new Sheet(cells, styles, notes, links, frozenTopLeft);
+        Map<Integer, Double> widths = new HashMap<>();
+        for (Element col : descendants(root, "col")) {
+            for (int i = Integer.parseInt(col.getAttribute("min")); i <= Integer.parseInt(col.getAttribute("max")); i++) {
+                widths.put(i, Double.valueOf(col.getAttribute("width")));
+            }
+        }
+        Map<Integer, Integer> outlines = new HashMap<>();
+        for (Element row : descendants(root, "row")) {
+            if (row.hasAttribute("outlineLevel")) {
+                outlines.put(Integer.parseInt(row.getAttribute("r")), Integer.parseInt(row.getAttribute("outlineLevel")));
+            }
+        }
+        return new Sheet(cells, styles, notes, links, frozenTopLeft, widths, outlines);
     }
 
     private static CellValue cellValue(Element cell, List<String> strings) {

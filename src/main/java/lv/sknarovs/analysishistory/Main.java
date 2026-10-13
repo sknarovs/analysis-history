@@ -7,6 +7,7 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.time.LocalDateTime;
+import java.util.List;
 import lv.sknarovs.analysishistory.AnalysisHistory.RunResult;
 
 /** Turns the laboratory reports in a folder into one Excel workbook of results over time. */
@@ -48,7 +49,8 @@ public final class Main {
             return 1;
         }
         try {
-            WorkbookWriter.write(options.output(), result.statuses(), LocalDateTime.now());
+            WorkbookWriter.write(options.output(), new History(List.of(), List.of(), List.of()), result.statuses(),
+                    LocalDateTime.now());
         } catch (IOException e) {
             err.println(ERROR + "cannot write " + options.output() + ": " + reason(e)
                     + ". If the workbook is open in another program, close it and run again.");
