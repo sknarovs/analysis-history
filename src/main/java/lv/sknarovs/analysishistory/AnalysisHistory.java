@@ -99,7 +99,7 @@ final class AnalysisHistory {
     static List<String> unmapped(History history) {
         List<String> lines = new ArrayList<>();
         for (HistoryRow row : history.rows()) {
-            if (row.nameNote() == null) {
+            if (!row.unmapped()) {
                 continue;
             }
             Set<String> labs = new LinkedHashSet<>();

@@ -107,9 +107,14 @@ final class ClabParser {
     private void readPage(Page page) {
         boolean started = false;
         boolean ended = false;
+        List<RowWarning> unplaced = new ArrayList<>();
         for (Row row : page.rows()) {
             if (!started) {
                 started = startsWith(row, COMMENTS);
+                // Without its Komentāri: row a page after the first is not read, but its result rows are reported.
+                if (!started && zones != null && page.number() > 1 && startsResult(row)) {
+                    unplaced.add(new RowWarning(page.number(), row.text()));
+                }
             } else if (isFooter(row)) {
                 close();
                 ended = true;
@@ -118,6 +123,9 @@ final class ClabParser {
             } else if (zones != null && startsResult(row)) {
                 warnings.add(new RowWarning(page.number(), row.text()));
             }
+        }
+        if (!started) {
+            warnings.addAll(unplaced);
         }
     }
 

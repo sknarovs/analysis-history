@@ -54,10 +54,12 @@ final class XlsxReader {
         private final String frozenTopLeft;
         private final Map<Integer, Double> widths;
         private final Map<Integer, Integer> outlines;
+        private final String summaryBelow;
 
         private Sheet(Map<String, CellValue> cells, Styles styles, Map<String, String> notes,
                 Map<String, String> links, String frozenTopLeft, Map<Integer, Double> widths,
-                Map<Integer, Integer> outlines) {
+                Map<Integer, Integer> outlines, String summaryBelow) {
+            this.summaryBelow = summaryBelow;
             this.widths = widths;
             this.outlines = outlines;
             this.cells = cells;
@@ -115,6 +117,11 @@ final class XlsxReader {
         /** The outline (grouping) level of a 1-based row; 0 when the row is not grouped. */
         int outlineLevel(int row) {
             return outlines.getOrDefault(row, 0);
+        }
+
+        /** The {@code summaryBelow} attribute of the sheet's outline properties; null when not written. */
+        String summaryBelow() {
+            return summaryBelow;
         }
 
         /** The width of a column given by letters such as {@code "A"}, in characters; {@code null} if not set. */
@@ -198,7 +205,11 @@ final class XlsxReader {
                 outlines.put(Integer.parseInt(row.getAttribute("r")), Integer.parseInt(row.getAttribute("outlineLevel")));
             }
         }
-        return new Sheet(cells, styles, notes, links, frozenTopLeft, widths, outlines);
+        String summaryBelow = null;
+        for (Element outline : descendants(root, "outlinePr")) {
+            summaryBelow = outline.hasAttribute("summaryBelow") ? outline.getAttribute("summaryBelow") : null;
+        }
+        return new Sheet(cells, styles, notes, links, frozenTopLeft, widths, outlines, summaryBelow);
     }
 
     private static CellValue cellValue(Element cell, List<String> strings) {

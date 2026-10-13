@@ -24,8 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 
 /**
- * Checks the program against the user's real reports (spec §8.3). They are never committed: the tests run only where
- * the folder exists ({@code results/}, or the system property {@code analysis.results}), never in CI. Nothing real is
+ * Checks the program against the user's real reports (spec §8.3). They are never committed, and the tests are opt-in:
+ * they run only when the system property {@code analysis.results} names the folder that holds them (never by default,
+ * never in CI), as in {@code ./gradlew test -Danalysis.results=results}. Nothing real is
  * printed on success; a failure lists what differs.
  */
 @EnabledIf("resultsPresent")
@@ -40,11 +41,12 @@ class RealDataTest {
             "rezultātu novērtējums");
 
     static boolean resultsPresent() {
-        return Files.isDirectory(results());
+        String folder = System.getProperty("analysis.results");
+        return folder != null && !folder.isBlank() && Files.isDirectory(Path.of(folder));
     }
 
     private static Path results() {
-        return Path.of(System.getProperty("analysis.results", "results"));
+        return Path.of(System.getProperty("analysis.results"));
     }
 
     @Test void everyReportIsReadWithoutWarnings() throws IOException {

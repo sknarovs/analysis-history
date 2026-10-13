@@ -210,7 +210,8 @@ final class TestCatalog {
         }
     }
 
-    /** Adds {@code alias}, {@code <laboratory>: <printed name>} and an optional {@code [unit]} or {@code [unit ×n]}. */
+    /** Adds {@code alias}, {@code <laboratory>: <printed name>} and an optional {@code [unit]} or {@code [unit ×n]}. A
+     * {@code [unit]} without a factor must be a spelling of the test's unit, or empty (the laboratory prints no unit). */
     private void addAlias(CatalogTest test, String alias) {
         int colon = alias.indexOf(':');
         if (colon < 0) {
@@ -234,6 +235,17 @@ final class TestCatalog {
                 override = override.substring(0, times);
             }
             expectedUnit = override.strip();
+            if (times < 0) {
+                if (expectedUnit.matches(".*[^\\s][\\sxX]*[xX]\\s*\\d+")) {
+                    throw new IllegalArgumentException("unit override '[" + expectedUnit
+                            + "]' ends in an ASCII 'x' factor; write the factor as ×10");
+                }
+                if (!expectedUnit.isEmpty() && !normaliseUnit(expectedUnit).equals(normaliseUnit(test.unit()))) {
+                    throw new IllegalArgumentException("unit override '[" + expectedUnit + "]' differs from the unit '"
+                            + test.unit() + "' but has no conversion factor; write it, e.g. [" + expectedUnit
+                            + " ×10]");
+                }
+            }
         }
         if (printed.isEmpty()) {
             throw new IllegalArgumentException("empty printed name");

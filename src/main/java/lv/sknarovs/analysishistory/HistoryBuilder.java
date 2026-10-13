@@ -40,6 +40,8 @@ final class HistoryBuilder {
     /** The note on the name of an unmapped test; {@code %s} is the laboratory's label. */
     private static final String UNMAPPED_NOTE =
             "Only in %s reports. Add an alias to catalog.txt to merge it with other labs.";
+    /** The note on the name of a test printed in another unit than its alias expects. */
+    private static final String MISMATCH_NOTE = "Printed in %s; the catalog expects %s.";
     /** Where an unmapped test sorts among the catalog's tests of its section: after all of them. */
     private static final int AFTER_CATALOG_TESTS = Integer.MAX_VALUE;
 
@@ -115,6 +117,7 @@ final class HistoryBuilder {
         private final String name;
         private final String unit;
         private final String nameNote;
+        private final boolean unmapped;
         private final int order;
         private final Entry[] cells;
 
@@ -125,13 +128,21 @@ final class HistoryBuilder {
                 name = test.name();
                 unit = test.unit();
                 nameNote = null;
+                unmapped = false;
                 order = test.order();
             } else {
                 Result result = first.result();
                 section = result.section().isBlank() ? OTHER_SECTION : result.section();
                 name = result.name();
                 unit = result.unit();
-                nameNote = UNMAPPED_NOTE.formatted(first.report().lab().label);
+                if (first.match() instanceof UnitMismatch mismatch) {
+                    nameNote = MISMATCH_NOTE.formatted(mismatch.printedUnit().isBlank() ? "no unit"
+                            : mismatch.printedUnit(), mismatch.expectedUnit());
+                    unmapped = false;
+                } else {
+                    nameNote = UNMAPPED_NOTE.formatted(first.report().lab().label);
+                    unmapped = true;
+                }
                 order = AFTER_CATALOG_TESTS;
             }
             cells = new Entry[visits];
@@ -156,7 +167,7 @@ final class HistoryBuilder {
             List<HistoryCell> shown = Arrays.stream(cells)
                     .map(entry -> entry == null ? null : cell(entry, reference, unit))
                     .toList();
-            return new HistoryRow(section, name, unit, reference.display(), nameNote, shown);
+            return new HistoryRow(section, name, unit, reference.display(), nameNote, unmapped, shown);
         }
     }
 

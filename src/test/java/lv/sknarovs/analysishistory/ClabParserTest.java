@@ -262,6 +262,19 @@ class ClabParserTest {
         }
     }
 
+    @Test void laterPageWithoutCommentsRowReportsItsResultRows() throws ReportFormatException {
+        Report report = ClabParser.parse(FILE, Fixtures.parse(TOP + """
+                46:Hemoglobīns | 213:14.1 | 278:g/dL | 349:(13.2 - 17.5)
+                === page
+                48:Vecums | 130:01.01.2001 (25 g.) | 470:100000001
+                46:Leikocīti | 213:5,40 | 278:10e9/L | 349:(4.00 - 9.80)
+                300:2/2
+                """));
+
+        assertEquals(List.of("Hemoglobīns"), names(report));
+        assertEquals(List.of(new RowWarning(2, "Leikocīti | 5,40 | 10e9/L | (4.00 - 9.80)")), report.warnings());
+    }
+
     @Test void contentEndsOnEachPageAtItsFirstFooterRow() throws ReportFormatException {
         for (String footer : List.of("48:Materiāls paņemts | 130:17.03.2026 08:10",
                 "48:Materiāls: | 130:venozās asinis", "48:Rezultātus pārbaudīja laboratorijas ārste ID 1",

@@ -124,6 +124,8 @@ class WorkbookWriterTest {
         assertFalse(history.bold("A8"));
         // Each section's tests are grouped under its band; the bands themselves are not.
         assertEquals(List.of(0, 1, 1, 0, 1), IntStream.rangeClosed(4, 8).map(history::outlineLevel).boxed().toList());
+        // The band is above its rows, so Excel's collapse button belongs above them too.
+        assertEquals("0", history.summaryBelow());
     }
 
     @Test void keepsNumbersNumericWithPrintedDecimals(@TempDir Path dir) throws IOException {

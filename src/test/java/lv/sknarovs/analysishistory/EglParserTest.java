@@ -25,6 +25,21 @@ class EglParserTest {
             179:Rezultāts | 269:References | 340:Vienības | 403:Iepr.rezult./datums
             """;
 
+    @Test void pageWithUnrecognisedHeaderReportsItsIndexRows() throws ReportFormatException {
+        Report report = EglParser.parse(FILE, Fixtures.parse(TOP + """
+                28:1/1 A | 62:Hemoglobīns | 179:150 | 269:132 - 175 | 340:g/L
+                === page
+                179:Rezultāts | 269:Atsauces | 340:Mērvienības
+                28:2/1 A | 62:Leikocīti | 179:5.4 | 269:4.0 - 9.8 | 340:10^9/L
+                62:Piezīme bez indeksa
+                """));
+
+        assertEquals(List.of("Hemoglobīns"), report.results().stream().map(Result::name).toList());
+        assertEquals(1, report.warnings().size());
+        assertEquals(2, report.warnings().get(0).page());
+        assertEquals(true, report.warnings().get(0).text().contains("Leikocīti"), report.warnings()::toString);
+    }
+
     @Test void readsHeader() throws ReportFormatException {
         Report report = parse("egl-sample");
 

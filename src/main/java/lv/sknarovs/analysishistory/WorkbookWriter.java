@@ -70,6 +70,8 @@ final class WorkbookWriter {
     /** The History sheet: three header rows, then a band for each section followed by its tests. */
     private static void writeHistory(Worksheet sheet, History history) {
         int columns = FIXED_COLUMNS + history.visits().size();
+        // A section's band sits above its rows, so the group's collapse button does too.
+        sheet.rowSumsBelow(false);
         for (int column = 0; column < columns; column++) {
             sheet.width(column, column < FIXED_COLUMNS ? FIXED_WIDTHS.get(column) : VISIT_WIDTH);
         }

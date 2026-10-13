@@ -297,10 +297,13 @@ class HistoryBuilderTest {
 
         assertEquals(List.of(
                 new HistoryRow(CBC, "Hemoglobīns", "g/L", "132–175", null, Arrays.asList(null, cell("150"))),
-                new HistoryRow(CBC, "Hemoglobīns", "g/dL", "13.2–17.5", ONLY_EGL, Arrays.asList(cell("14.8"), null)),
-                new HistoryRow(CHEMISTRY, "Glomerulu filtrācijas ātrums", "ml/min", "", ONLY_EGL,
-                        Arrays.asList(cell("95"), null))),
+                new HistoryRow(CBC, "Hemoglobīns", "g/dL", "13.2–17.5",
+                        "Printed in g/dL; the catalog expects g/L.", false, Arrays.asList(cell("14.8"), null)),
+                new HistoryRow(CHEMISTRY, "Glomerulu filtrācijas ātrums", "ml/min", "",
+                        "Printed in ml/min; the catalog expects ml/min/1.73 m².", false, Arrays.asList(cell("95"), null))),
                 history.rows());
+        // The alias exists, so the run warning is the report and the console does not ask for one.
+        assertEquals(List.of(), AnalysisHistory.unmapped(history));
         // The warning names the test as printed, and the unit as the catalog writes it.
         assertEquals(List.of(
                 "testesanas_parskats_20000011.pdf: Hemoglobīns is printed in 'g/dL' but the catalog expects 'g/L'; "

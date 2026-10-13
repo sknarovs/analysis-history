@@ -58,7 +58,8 @@ history, shipped as a GraalVM native binary. Design: `docs/superpowers/specs/202
 - JUnit 6 in `src/test/java`; parsers are tested from fixtures, the text layer from PDFs generated with PDFBox
   (`TestPdf`, `FixturePdf`), workbooks are read back with `java.util.zip` + `javax.xml` so tests also run as a native image.
   `SampleReports` generates the PDFs for end-to-end tests and the CI smoke run.
-- `RealDataTest` reads the real reports in `results/` (or `-Danalysis.results=<folder>`) and is skipped when absent: all
+- `RealDataTest` is opt-in: it runs only with `./gradlew test -Danalysis.results=<folder>` (e.g. `results/`) and is skipped
+  otherwise, so no real data is read by default: all
   PDFs recognised and no warnings, values equal to the EGL HTML export, zero previous-result mismatches. Never runs in CI.
 - `nativeTest` runs the same suite as a native image.
 - Tests are independent of locale and line endings (CI runs in a container without a UTF-8 locale and on Windows).

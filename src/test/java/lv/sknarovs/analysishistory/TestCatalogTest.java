@@ -131,7 +131,7 @@ class TestCatalogTest {
 
                 [Hematoloģija]
                 Hemoglobīns  |  g/L  |  EGL: Hemoglobīns  | CLab: Hemoglobīns [g/dL ×10] | CLab: Hb (vecais) [g/dL ×10]
-                Zeta | U/L | EGL: Zeta | CLab: Zeta [U/dL ×100] | CLab: Zeta kopā (aprēķ.) [IU/L]
+                Zeta | U/L | EGL: Zeta | CLab: Zeta [U/dL ×100] | CLab: Zeta kopā (aprēķ.) [IU/L ×1] | CLab: Zeta sin. [u/l]
                 Kalcijs | mmol/L | EGL: Kalcijs | CLab: Kalcijs []
                 # a comment between the tests
                 [Urīna analīze]
@@ -150,7 +150,8 @@ class TestCatalogTest {
         CatalogTest zeta = new CatalogTest("Hematoloģija", "Zeta", "U/L", 1);
         assertEquals(new Matched(zeta, new BigDecimal("100")),
                 catalog.match(Lab.CLAB, Specimen.BLOOD, "Zeta", "U/dL"));
-        // A printed unit without a factor changes the expected unit only.
+        // A factor of 1 changes the expected unit only; a spelling of the test's unit needs no factor.
+        assertEquals(new Matched(zeta, BigDecimal.ONE), catalog.match(Lab.CLAB, Specimen.BLOOD, "Zeta sin.", "U/L"));
         assertEquals(new Matched(zeta, BigDecimal.ONE),
                 catalog.match(Lab.CLAB, Specimen.BLOOD, "Zeta kopā (aprēķ.)", "IU/L"));
         assertEquals(new UnitMismatch(zeta, "IU/L", "U/L"),
@@ -204,6 +205,18 @@ class TestCatalogTest {
                 [Hematoloģija]
                 # CLab prints g/dL
                 Hemoglobīns | g/L | CLab: Hemoglobīns [g/dL ×3]
+                """);
+        assertRejected("no conversion factor", 2, """
+                [Hematoloģija]
+                Hemoglobīns | g/L | CLab: Hemoglobīns [g/dL]
+                """);
+        assertRejected("write the factor as ×10", 2, """
+                [Hematoloģija]
+                Hemoglobīns | g/L | CLab: Hemoglobīns [g/dL x10]
+                """);
+        assertRejected("write the factor as ×10", 2, """
+                [Hematoloģija]
+                Hemoglobīns | g/L | CLab: Hemoglobīns [g/dL X10]
                 """);
         assertRejected("whole number", 2, """
                 [Hematoloģija]

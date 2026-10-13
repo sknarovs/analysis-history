@@ -95,14 +95,21 @@ final class EglParser {
         boolean ended = false;
         for (Page page : pages) {
             Zones zones = null;
+            List<RowWarning> unplaced = new ArrayList<>();
             for (Row row : page.rows()) {
                 Optional<Zones> header = Zones.egl(row);
                 if (header.isPresent()) {
                     zones = header.get();
                     continue;
                 }
-                // Rows above the page's header are its patient block.
-                if (zones == null || isFurniture(row)) {
+                if (isFurniture(row)) {
+                    continue;
+                }
+                // Rows above the page's header are its patient block; they are reported if no header follows.
+                if (zones == null) {
+                    if (startsWithIndex(row)) {
+                        unplaced.add(new RowWarning(page.number(), row.text()));
+                    }
                     continue;
                 }
                 if (ended) {
@@ -116,6 +123,10 @@ final class EglParser {
                 } else {
                     readRow(page.number(), row, zones);
                 }
+            }
+            // A page whose header was not recognised has no zones to read by, but its result rows are not lost.
+            if (zones == null) {
+                warnings.addAll(unplaced);
             }
         }
         close();
