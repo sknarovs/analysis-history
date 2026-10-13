@@ -1,0 +1,5 @@
+# Text sources and fixtures are checked out with LF on every platform (tests compare fixture text).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.ttf binary

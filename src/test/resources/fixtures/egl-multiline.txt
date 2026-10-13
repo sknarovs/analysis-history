@@ -1,0 +1,25 @@
+# An invented E. Gulbja Laboratorija report whose rows wrap onto a second line: names (TSH, tick-borne encephalitis
+# IgG), values (Pozitīvs 150.2 U/mL, Nav atrastas) and units (ml/min/1.73 m², and µmol/L split after its slash).
+200:E.Gulbja Laboratorija
+200:e-pasts : info@egl.lv
+28:Testēšanas pārskats Nr. 20000003#1000 // pabeigts
+28:Vārds , Uzvārds | 160:Jānis Paraugs
+28:Personas kods | 160:010101-10000
+28:Reģistrēts laboratorijā | 160:19.01.26,07:45
+179:Rezultāts | 269:References | 340:Vienības | 403:Iepr.rezult./datums
+~269:intervāls
+85:*Klīniskā ķīmija
+28:1/5 A | 62:Glomerulu filtrācijas ātrums | 179:92 | 269:>90 | 340:ml/min/1.73
+~340:m²
+28:2/5 A | 62:Kreatinīns | 179:80 | 269:62 - 106 | 340:µmol/
+~340:L
+88:*Hormoni
+28:3/5 A | 62:TSH - Tireotropais | 179:2.10 | 269:0.55 - 4.78 | 340:mU/L
+~62:hormons
+85:*Imūnhematoloģija
+28:4/5 A | 62:Antieritrocitārās av. | 179:Nav
+~179:atrastas
+85:*Infekcijas
+28:5/5 A | 62:Ērču encefalīta vīrusa | 179:Pozitīvs
+~62:IgG | 179:150.2 U/mL
+85:Pārskata beigas

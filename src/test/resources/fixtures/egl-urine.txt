@@ -1,0 +1,22 @@
+# An invented E. Gulbja Laboratorija urine report. The test strip and the microscopy both list "Leikocīti": the
+# non-bold "Mikroskopija" line starts the sediment rows, while the strip's non-bold sub-heading is only a note. A row
+# without a sample code takes the section's specimen, and the next section ends the microscopy group.
+200:E.Gulbja Laboratorija
+200:e-pasts : info@egl.lv
+28:Testēšanas pārskats Nr. 20000004#1000 // pabeigts
+28:Vārds , Uzvārds | 160:Jānis Paraugs
+28:Personas kods | 160:010101-10000
+28:Reģistrēts laboratorijā | 160:12.01.26,08:40
+179:Rezultāts | 269:References | 340:Vienības | 403:Iepr.rezult./datums
+~269:intervāls
+85:*Urīna analīze
+91:Ķīmiska ar teststripu
+28:1/18 U | 62:Īpatnējais svars | 179:1.015 | 269:1.003 - 1.035
+28:2/18 U | 62:Leikocīti | 179:<25 | 269:<25 | 340:/µL
+28:3/18 | 62:Nitrītu tests | 179:Negatīvs | 269:Negatīvs
+91:Mikroskopija
+28:11/18 U | 62:Leikocīti | 179:6 | 269:0 - 25 | 340:/µL
+28:12/18 U | 62:Plakanais epitēlijs | 179:2 | 269:0 - 10 | 340:/µL
+85:*Klīniskā ķīmija
+28:18/18 A | 62:Glikoze plazmā | 179:5.1 | 269:4.1 - 5.9 | 340:mmol/L
+85:Pārskata beigas

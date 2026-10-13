@@ -1,0 +1,24 @@
+# An invented Centrālā Laboratorija blood count for the invented patient. Rows print a previous result (value at
+# x 420, date and time at 505; one hour has a single digit). The group "Leikocitārā formula" (bold here, plain in
+# clab-sample: CLab varies) is a normal row below the last row, and its nested rows sit right of the header's columns:
+# name 63, value 215, flag 253 under the "Vienības" header, unit 275, range 318.
+150:TESTĒŠANAS PĀRSKATS / PABEIGTS
+48:Vārds, Uzvārds | 130:Jānis Paraugs
+48:Vecums | 130:01.01.2001 (25 g.) | 470:100000002
+48:Pers.kods | 130:010101-10000
+48:Diagnoze | 340:Reģistrēts | 430:24.03.2026 08:05
+48:Komentāri:
+280:*Hematoloģija
+49:*Tests | 194:*Rezultāts | 257:*Vienības | 318:*References intervāls | 417:*Iepriekšējais rezultāts | 522:*Datums
+50:Pilna asins aina ar EGĀ
+46:Hemoglobīns | 213:14.1 | 278:g/dL | 349:(13.2 - 17.5) | 420:14.6 | 505:03.11.2025 09:12
+46:Leikocīti | 213:5,40 | 278:10e9/L | 349:(4.00 - 9.80) | 420:6.10 | 505:03.11.2025 09:12
+46:Trombocīti | 216:212 | 278:10e9/L | 349:(150 - 410) | 420:238 | 505:14.07.2025 9:08
+46:EGĀ | 220:6 | 278:mm/h | 349:(2 - 15)
+48:*Leikocitārā formula
+63:Neitrofīli | 215:40,1 | 253:↓ | 275:% | 318:(48.0 - 72.0) | 420:55.2 | 505:03.11.2025 09:12
+63:Neitrofīli abs. | 215:2,17 | 275:10e9/L | 318:(1.80 - 7.70)
+63:Limfocīti | 215:47,8 | 253:↑ | 275:% | 318:(18.0 - 42.0)
+63:Limfocīti abs. | 215:2,58 | 275:10e9/L | 318:(1.00 - 4.80)
+48:Rezultātus pārbaudīja laboratorijas ārste ID 1
+48:Testēšanas metodes, mērījumu nenoteiktības … www.laboratorija.lv

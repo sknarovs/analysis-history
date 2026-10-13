@@ -1,0 +1,29 @@
+# An invented Centrālā Laboratorija report with a urine test strip (urine rows at x 56). The group "Urīna analīze ar
+# stripu" makes its rows urine, also on page 2, which repeats the patient block but not the column header. The blood
+# glucose before it, under another section, stays blood.
+150:TESTĒŠANAS PĀRSKATS / PABEIGTS
+48:Vārds, Uzvārds | 130:Jānis Paraugs
+48:Vecums | 130:01.01.2001 (25 g.) | 470:100000004
+48:Pers.kods | 130:010101-10000
+48:Diagnoze | 340:Reģistrēts | 430:20.04.2026 07:50
+48:Komentāri:
+280:*Klīniskā ķīmija
+49:*Tests | 194:*Rezultāts | 257:*Vienības | 318:*References intervāls | 417:*Iepriekšējais rezultāts | 522:*Datums
+46:Glikoze | 213:5,1 | 270:mmol/L | 349:(4.1 - 5.9)
+274:*Urīna izmeklējumi
+49:*Tests | 194:*Rezultāts | 257:*Vienības | 318:*References intervāls | 417:*Iepriekšējais rezultāts | 522:*Datums
+49:Urīna analīze ar stripu
+56:Glikoze | 211:Norma | 282:mmol/L | 325:Norma
+56:Īpatnējais svars | 217:1.009 | 325:(1.002-1.035)
+48:Testēšanas metodes, mērījumu nenoteiktības … www.laboratorija.lv
+=== page
+150:TESTĒŠANAS PĀRSKATS / PABEIGTS
+48:Vārds, Uzvārds | 130:Jānis Paraugs
+48:Vecums | 130:01.01.2001 (25 g.) | 470:100000004
+48:Pers.kods | 130:010101-10000
+48:Diagnoze | 340:Reģistrēts | 430:20.04.2026 07:50
+48:Komentāri:
+56:Bilirubīns urīnā | 211:Norma | 275:umol/L | 325:Norma
+56:Krāsa | 203:Dzeltena
+48:Rezultātus pārbaudīja laboratorijas ārste ID 1
+48:Testēšanas metodes, mērījumu nenoteiktības … www.laboratorija.lv

@@ -1,0 +1,24 @@
+# An invented Centrālā Laboratorija report with notes: a sentence 12 pt below the INR row that starts in the name
+# column at x 60 and runs on to x 500, and the eGFR interpretation lines. Notes belong to no result and are no groups.
+150:TESTĒŠANAS PĀRSKATS / PABEIGTS
+48:Vārds, Uzvārds | 130:Jānis Paraugs
+48:Vecums | 130:01.01.2001 (25 g.) | 470:100000005
+48:Pers.kods | 130:010101-10000
+48:Diagnoze | 340:Reģistrēts | 430:05.05.2026 08:20
+48:Komentāri:
+276:*Hemostāze
+49:*Tests | 194:*Rezultāts | 257:*Vienības | 318:*References intervāls | 417:*Iepriekšējais rezultāts | 522:*Datums
+46:Protrombīns | 216:96 | 278:% | 349:(70 - 130)
+46:INR | 213:1,03 | 349:(0.85 - 1.15)
+~60:Pacientiem, kas lieto K vitamīna antagonistus, INR mērķa diapazons parasti ir 2.0 - 3.0.
+46:APTL | 213:31,5 | 278:sek | 349:(25.0 - 36.5)
+280:*Klīniskā ķīmija
+49:*Tests | 194:*Rezultāts | 257:*Vienības | 318:*References intervāls | 417:*Iepriekšējais rezultāts | 522:*Datums
+46:Kreatinīns | 213:91,0 | 278:umol/L | 349:(62.0 - 106.0)
+49:Glomerulārās | 210:97 | 261:mL/min/
+~49:filtrācijas ātrums | 261:1.73 m2
+49:GFĀ aprēķināts pēc CKD-EPI formulas. Nieru funkcija pēc GFĀ (mL/min/1.73 m2):
+~49:≥ 90 normāla; 60 - 89 viegli samazināta; 45 - 59 viegli līdz mēreni samazināta;
+~49:30 - 44 mēreni līdz izteikti samazināta; 15 - 29 izteikti samazināta; < 15 nieru mazspēja.
+48:Rezultātus pārbaudīja laboratorijas ārste ID 1
+48:Testēšanas metodes, mērījumu nenoteiktības … www.laboratorija.lv

@@ -322,9 +322,9 @@ the arrow (its HTML export shows it).
 `src/main/resources/lv/sknarovs/analysishistory/catalog.txt`, UTF-8, one line per test:
 
 ```
-# <display name> | <unit> | <lab>: <name as printed> [(<printed unit> ×<factor>)] | …
+# <display name> | <unit> | <lab>: <name as printed> [<printed unit> ×<factor>] | …
 [Hematoloģija]
-Hemoglobīns | g/L | EGL: Hemoglobīns            | CLab: Hemoglobīns (g/dL ×10)
+Hemoglobīns | g/L | EGL: Hemoglobīns            | CLab: Hemoglobīns [g/dL ×10]
 MCV         | fL  | EGL: MCV- vid. Er tilpums   | CLab: MCV Eritroc.vid.tilp.
 [Urīna analīze]
 Leikocīti   | /µL | EGL: Leikocīti              | CLab: Leikocīti urīnā

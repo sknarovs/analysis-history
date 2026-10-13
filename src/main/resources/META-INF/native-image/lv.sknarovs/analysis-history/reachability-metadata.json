@@ -1,0 +1,90 @@
+{
+  "reflection": [
+    {
+      "type": "org.apache.commons.logging.LogFactory"
+    },
+    {
+      "type": "org.apache.commons.logging.impl.Jdk14Logger",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.apache.commons.logging.impl.Log4jApiLogFactory"
+    },
+    {
+      "type": "org.apache.commons.logging.impl.LogFactoryImpl",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.apache.commons.logging.impl.Slf4jLogFactory"
+    },
+    {
+      "type": "org.apache.commons.logging.impl.WeakHashtable",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.apache.logging.slf4j.SLF4JProvider"
+    },
+    {
+      "type": "sun.misc.Unsafe",
+      "fields": [
+        {
+          "name": "theUnsafe"
+        }
+      ],
+      "methods": [
+        {
+          "name": "invokeCleaner",
+          "parameterTypes": [
+            "java.nio.ByteBuffer"
+          ]
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "glob": "org/apache/pdfbox/resources/afm/*.afm"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/glyphlist/*.txt"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/text/BidiMirroring.txt"
+    },
+    {
+      "glob": "lv/sknarovs/analysishistory/*.txt"
+    },
+    {
+      "glob": "META-INF/services/org.apache.commons.logging.LogFactory"
+    },
+    {
+      "glob": "META-INF/services/org.slf4j.spi.SLF4JServiceProvider"
+    },
+    {
+      "glob": "commons-logging.properties"
+    },
+    {
+      "glob": "org/apache/fontbox/cmap/Identity-H"
+    }
+  ]
+}

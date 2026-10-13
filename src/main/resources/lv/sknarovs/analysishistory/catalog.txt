@@ -1,0 +1,105 @@
+# <display name> | <unit> | <lab>: <name as printed> [<printed unit> ×<factor>] | …
+# Sections imply the specimen: Urīna analīze → urine, Urīna mikroskopija → urine sediment, others → blood.
+[Hematoloģija]
+Eritrocīti | 10¹²/L | EGL: Eritrocīti | CLab: Eritrocīti
+Hemoglobīns | g/L | EGL: Hemoglobīns | CLab: Hemoglobīns [g/dL ×10]
+Hematokrīts | % | EGL: Hematokrīts | CLab: Hematokrīts
+MCV - vid. eritrocītu tilpums | fL | EGL: MCV- vid. Er tilpums | CLab: MCV Eritroc.vid.tilp.
+MCH - vid. Hb saturs eritrocītā | pg | EGL: MCH-vidējā Hb konc. | CLab: MCH Vid.Hb saturs er.
+MCHC - vid. Hb koncentrācija | g/L | EGL: MCHC-vid. Hb konc. Er | CLab: MCHC Vid.Hb konc.er. [g/dL ×10]
+RDW - eritrocītu sadalījums | % | EGL: RDW-Er. sadalījums | CLab: RDW Eritr. anizocit.
+Trombocīti | 10⁹/L | EGL: Trombocīti | CLab: Trombocīti
+MPV - vid. trombocītu tilpums | fL | EGL: MPV-vid. tr. tilpums
+PCT - trombocitokrīts | % | EGL: PCT-trombocitokrīts
+PDW - trombocītu sadalījums | fL | EGL: PDW-tr. sadalījums
+Leikocīti | 10⁹/L | EGL: Leikocīti | CLab: Leikocīti
+EGĀ | mm/h | EGL: EGĀ (Kapilārās fotometrijas metode) | CLab: EGĀ
+[Leikocītu formula]
+Neitrofīli % | % | EGL: Neitrofīlie % | CLab: Neitrofīli
+Neitrofīli abs. | 10⁹/L | EGL: Neitrofīlie abs. | CLab: Neitrofīli abs.
+Limfocīti % | % | EGL: Limfocīti % | CLab: Limfocīti
+Limfocīti abs. | 10⁹/L | EGL: Limfocīti abs. | CLab: Limfocīti abs.
+Monocīti % | % | EGL: Monocīti % | CLab: Monocīti
+Monocīti abs. | 10⁹/L | EGL: Monocīti abs. | CLab: Monocīti abs.
+Eozinofīli % | % | EGL: Eozinofīlie % | CLab: Eozinofīli
+Eozinofīli abs. | 10⁹/L | EGL: Eozinofīlie abs. | CLab: Eozinofīli abs.
+Bazofīli % | % | EGL: Bazofīlie % | CLab: Bazofīli
+Bazofīli abs. | 10⁹/L | EGL: Bazofīlie abs. | CLab: Bazofīli abs.
+[Dzelzs un vitamīni]
+Dzelzs | µmol/L | EGL: Dzelzs
+Transferīns | g/L | EGL: Transferīns
+Dzelzs saistīšanas spēja | µmol/L | EGL: Dzelzs saistīšanas spēja
+Transferīna piesātinājums | % | EGL: Transferīna piesātinājums
+Ferritīns | ng/mL | EGL: Ferritīns
+Vitamīns B12 | pg/mL | EGL: Vitamīns B12
+Folskābe | ng/mL | EGL: Folskābe
+25-OH-vitamīns D (D3+D2) | ng/mL | EGL: 25-OH-vitamīns D (D3+D2)
+[Klīniskā ķīmija]
+Glikoze | mmol/L | EGL: Glikoze plazmā | CLab: Glikoze
+Urīnviela | mmol/L | EGL: Urīnviela | CLab: Urīnviela
+Kreatinīns | µmol/L | EGL: Kreatinīns | CLab: Kreatinīns
+Glomerulu filtrācijas ātrums | ml/min/1.73 m² | EGL: Glomerulu filtrācijas ātrums | CLab: Glomerulārās filtrācijas ātrums
+Bilirubīns kopējais | µmol/L | EGL: Bilirubīns-kopējais | CLab: Bilirubīns kopējais
+Bilirubīns tiešais | µmol/L | CLab: Bilirubīns tiešais
+ALAT | U/L | EGL: ALAT | CLab: ALAT
+ASAT | U/L | EGL: ASAT | CLab: ASAT
+Sārmainā fosfatāze | U/L | EGL: Sārmainā fosfatāze
+KFK - kreatinkināze | U/L | EGL: KFK - Kreatinkināze
+Nātrijs | mmol/L | EGL: Nātrijs | CLab: Nātrijs
+Kālijs | mmol/L | EGL: Kālijs | CLab: Kālijs
+Kalcijs | mmol/L | EGL: Kalcijs | CLab: Kalcijs
+C reaktīvais olbaltums | mg/L | EGL: CRO | CLab: C reaktīvais olbaltums
+[Lipīdi]
+Kopējais holesterīns | mmol/L | EGL: Kopējais holesterīns
+Augsta blīvuma holesterīns | mmol/L | EGL: Augsta blīvuma holesterīns
+Ne-ABL holesterīns | mmol/L | EGL: Ne-ABL holesterīns
+Zema blīvuma holesterīns | mmol/L | EGL: Zema blīvuma holesterīns
+R-holesterīns | mmol/L | EGL: R-holesterīns
+Triglicerīdi | mmol/L | EGL: Triglicerīdi
+[Hormoni]
+TSH - tireotropais hormons | mU/L | EGL: TSH - Tireotropais hormons
+Brīvais T4 | pmol/L | EGL: Brīvais T4
+Brīvais T3 | pmol/L | EGL: Brīvais T3
+T3 - kopējais trijodtironīns | nmol/L | EGL: T3 - Kopējais trijodtironīns
+Antivielas pret tireoglobulīnu | IU/mL | EGL: Antivielas pret tireoglobulīnu
+Antivielas pret tireoperoksidāzi | IU/mL | EGL: Antivielas pret tireoperoksidāzi
+Prolaktīns | mIU/L | EGL: Prolaktīns
+Testosterons | ng/mL | EGL: Testosterons
+SHBG | nmol/L | EGL: SHBG
+Kortizols | nmol/L | EGL: Kortizols
+AKTH | pg/mL | EGL: AKTH
+[Hemostāze]
+Protrombīns (pēc Kvika) | % | EGL: Protrombīna laiks | CLab: Protrombīns
+INR |  | EGL: INR | CLab: INR
+APTL | sek | EGL: APTL | CLab: APTL
+Fibrinogēns | g/L | CLab: Fibrinogēns
+[Imūnhematoloģija]
+Asins grupa |  | EGL: Asins grupa | CLab: Asins grupa (gelkaršu met.)
+Rh(D) |  | EGL: Rēzus | CLab: Rh (D) pazīme (gelkaršu met.)
+Antieritrocitārās antivielas |  | EGL: Antieritrocitārās av.
+[Infekcijas]
+SARS-CoV-2 RNS (PCR) |  | CLab: Koronavīrusa 2019-nCoV RNS noteikšana
+Anti-SARS-CoV-2-Nc | COI | EGL: Anti-SARS-CoV-2-Nc
+Ērču encefalīta vīrusa IgG |  | EGL: Ērču encefalīta vīrusa IgG
+[Urīna analīze]
+Īpatnējais svars |  | EGL: Īpatnējais svars | CLab: Īpatnējais svars
+pH |  | EGL: Reakcija pH | CLab: Reakcija
+Leikocīti | /µL | EGL: Leikocīti | CLab: Leikocīti urīnā
+Nitrīti |  | EGL: Nitrītu tests | CLab: Nitrīti
+Olbaltums | g/L | EGL: Olbaltums | CLab: Olbaltums
+Glikoze | mmol/L | EGL: Glikoze | CLab: Glikoze
+Ketoni | mmol/L | EGL: Ketoni | CLab: Ketonvielas
+Urobilinogēns | µmol/L | EGL: Urobilinogēns | CLab: Urobilinogēns
+Bilirubīns | µmol/L | EGL: Bilirubīns | CLab: Bilirubīns urīnā
+Eritrocīti (Hb) | /µL | EGL: Eritrocīti , Hb | CLab: Eritrocīti
+Krāsa |  | CLab: Krāsa
+Dzidrums |  | CLab: Dzidrums
+[Urīna mikroskopija]
+Leikocīti | /µL | EGL: Leikocīti
+Eritrocīti | /µL | EGL: Eritrocīti
+Plakanais epitēlijs | /µL | EGL: Plakanais epitēlijs
+Pārejas epitēlijs | /µL | EGL: Pārejas epitēlijs
+Hialīnie cilindri | /r.l. | EGL: Hialīnie cilindri
+Gļotas |  | EGL: Gļotas
+Sāļi |  | EGL: Sāļi
+Baktērijas |  | EGL: Baktērijas

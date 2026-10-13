@@ -1,0 +1,16 @@
+# An invented E. Gulbja Laboratorija report with a value that belongs to no result: it comes right after a section
+# heading, and a heading ends the result above it.
+200:E.Gulbja Laboratorija
+200:e-pasts : info@egl.lv
+28:Testēšanas pārskats Nr. 20000006#1000 // pabeigts
+28:Vārds , Uzvārds | 160:Jānis Paraugs
+28:Personas kods | 160:010101-10000
+28:Reģistrēts laboratorijā | 160:09.03.26,08:05
+179:Rezultāts | 269:References | 340:Vienības | 403:Iepr.rezult./datums
+~269:intervāls
+85:*Hematoloģija
+28:1/2 A | 62:Hemoglobīns | 179:150 | 269:132 - 175 | 340:g/L
+88:*Hormoni
+179:12.3
+28:2/2 A | 62:Brīvais T4 | 179:15.2 | 269:12.0 - 22.0 | 340:pmol/L
+85:Pārskata beigas
