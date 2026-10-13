@@ -54,6 +54,35 @@ class MainTest {
         assertEquals(List.of(), files(dir));
     }
 
+    @Test void folderWithoutReadableReportsExitsOne(@TempDir Path dir) throws IOException {
+        try (TestPdf pdf = TestPdf.create().page().text(49, 100, 10, "Some other lab", false)) {
+            pdf.save(dir.resolve("other.pdf"));
+        }
+
+        assertEquals(1, run(dir.toString()));
+
+        assertTrue(errors().contains("no reports could be read in " + dir), this::console);
+        assertEquals(List.of(dir.resolve("other.pdf")), files(dir));
+    }
+
+    @Test void listsWarningsAndUnmappedTestsAfterTheSummary(@TempDir Path dir) throws IOException {
+        AnalysisHistoryTest.render(dir, "egl-stray", "stray.pdf", "62:Brīvais T4", "62:Izdomāts tests");
+
+        assertEquals(0, run(dir.toString()), this::console);
+
+        List<String> lines = printed().lines().toList();
+        assertEquals("Read 1 PDFs: 1 tabulated, 0 not tabulated, 0 unrecognised, 0 duplicates, 0 errors; 1 warnings",
+                lines.get(0));
+        assertEquals(List.of("warning: stray.pdf: page 1: unattached row: 12.3",
+                "unmapped: Izdomāts tests (EGL) — add an alias to catalog.txt to merge it"), lines.subList(2, 4));
+    }
+
+    @Test void invalidPathIsUsageError() {
+        assertEquals(2, run("-o", "x\0.xlsx"));
+
+        assertTrue(errors().startsWith(CliOptions.USAGE), this::console);
+    }
+
     @Test void helpExitsZero() {
         assertEquals(0, run("-h"));
 

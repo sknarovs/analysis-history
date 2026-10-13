@@ -34,4 +34,18 @@ class CliOptionsTest {
             assertThrows(CliOptions.UsageException.class, () -> CliOptions.parse(args), String.join(" ", args));
         }
     }
+
+    @Test void rejectsInvalidPathsAndEmptyAttachedValues() {
+        // Path.of rejects NUL everywhere, as Windows rejects " < > | ? *.
+        for (String[] args : List.of(new String[] {"a\0b"}, new String[] {"-o", "x\0.xlsx"},
+                new String[] {"--output=x\0.xlsx"}, new String[] {"--output="}, new String[] {"-o", ""},
+                new String[] {"res", "--output", ""})) {
+            assertThrows(CliOptions.UsageException.class, () -> CliOptions.parse(args), String.join(" ", args));
+        }
+    }
+
+    @Test void acceptsAttachedValueStartingWithDash() throws Exception {
+        assertEquals(new CliOptions(Path.of("."), Path.of("-x.xlsx"), false), CliOptions.parse("--output=-x.xlsx"));
+        assertEquals(new CliOptions(Path.of("."), Path.of("-x.xlsx"), false), CliOptions.parse("-o-x.xlsx"));
+    }
 }

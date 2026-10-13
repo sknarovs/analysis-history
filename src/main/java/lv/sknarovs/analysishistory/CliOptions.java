@@ -1,5 +1,6 @@
 package lv.sknarovs.analysishistory;
 
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -32,17 +33,17 @@ record CliOptions(Path dir, Path output, boolean help) {
         Path dir = null;
         Path output = null;
         boolean help = false;
-        Deque<String> tokens = tokens(args);
+        Deque<Token> tokens = tokens(args);
         while (!tokens.isEmpty()) {
-            String token = tokens.removeFirst();
-            switch (token) {
-                case "-o", "--output" -> output = Path.of(value(tokens, "-o/--output"));
+            Token token = tokens.removeFirst();
+            switch (token.text()) {
+                case "-o", "--output" -> output = path(value(tokens, "-o/--output"), "-o/--output");
                 case "-h", "--help" -> help = true;
                 default -> {
-                    if (token.startsWith("-") || dir != null) {
-                        throw new UsageException("unrecognized arguments: " + token);
+                    if (token.text().startsWith("-") || dir != null) {
+                        throw new UsageException("unrecognized arguments: " + token.text());
                     }
-                    dir = Path.of(token);
+                    dir = path(token.text(), "DIR");
                 }
             }
         }
@@ -52,29 +53,47 @@ record CliOptions(Path dir, Path output, boolean help) {
         return new CliOptions(dir, output != null ? output : dir.resolve(WORKBOOK), help);
     }
 
-    /** Splits {@code --opt=value} and {@code -ovalue} into separate option and value tokens. */
-    private static Deque<String> tokens(String... args) {
-        Deque<String> tokens = new ArrayDeque<>();
+    /** An argument, or the value split off an option; {@code attached} when it was written in the option's argument. */
+    private record Token(String text, boolean attached) {
+    }
+
+    /** Splits {@code --opt=value} and {@code -ovalue} into separate option and attached value tokens. */
+    private static Deque<Token> tokens(String... args) {
+        Deque<Token> tokens = new ArrayDeque<>();
         for (String arg : args) {
             int equals = arg.indexOf('=');
             if (arg.startsWith("--") && equals > 0) {
-                tokens.add(arg.substring(0, equals));
-                tokens.add(arg.substring(equals + 1));
+                tokens.add(new Token(arg.substring(0, equals), false));
+                tokens.add(new Token(arg.substring(equals + 1), true));
             } else if (arg.startsWith("-o") && arg.length() > 2) {
-                tokens.add("-o");
-                tokens.add(arg.substring(2));
+                tokens.add(new Token("-o", false));
+                tokens.add(new Token(arg.substring(2), true));
             } else {
-                tokens.add(arg);
+                tokens.add(new Token(arg, false));
             }
         }
         return tokens;
     }
 
-    private static String value(Deque<String> tokens, String option) throws UsageException {
-        String next = tokens.peekFirst();
-        if (next == null || next.startsWith("-")) {
+    /** The option's value: the attached one, which may start with {@code -}, or the next argument unless an option. */
+    private static String value(Deque<Token> tokens, String option) throws UsageException {
+        Token next = tokens.peekFirst();
+        if (next == null || !next.attached() && next.text().startsWith("-")) {
             throw new UsageException("argument " + option + ": expected one argument");
         }
-        return tokens.removeFirst();
+        tokens.removeFirst();
+        if (next.text().isEmpty()) {
+            throw new UsageException("argument " + option + ": expected a non-empty path");
+        }
+        return next.text();
+    }
+
+    /** {@code text} as a path; one the file system cannot name (on Windows {@code "<>|?*}) is a usage error. */
+    private static Path path(String text, String argument) throws UsageException {
+        try {
+            return Path.of(text);
+        } catch (InvalidPathException e) {
+            throw new UsageException("argument " + argument + ": invalid path: " + e.getReason());
+        }
     }
 }

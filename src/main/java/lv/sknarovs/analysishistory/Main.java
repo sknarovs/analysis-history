@@ -7,7 +7,6 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.time.LocalDateTime;
-import java.util.List;
 import lv.sknarovs.analysishistory.AnalysisHistory.RunResult;
 
 /** Turns the laboratory reports in a folder into one Excel workbook of results over time. */
@@ -39,7 +38,7 @@ public final class Main {
         }
         RunResult result;
         try {
-            result = AnalysisHistory.run(options.dir());
+            result = AnalysisHistory.run(options.dir(), TestCatalog.bundled());
         } catch (IOException e) {
             err.println(ERROR + "cannot read " + options.dir() + ": " + reason(e));
             return 1;
@@ -48,9 +47,12 @@ public final class Main {
             err.println(ERROR + "no PDF files in " + options.dir());
             return 1;
         }
+        if (result.statuses().stream().noneMatch(status -> status.status().startsWith("OK"))) {
+            err.println(ERROR + "no reports could be read in " + options.dir());
+            return 1;
+        }
         try {
-            WorkbookWriter.write(options.output(), new History(List.of(), List.of(), List.of()), result.statuses(),
-                    LocalDateTime.now());
+            WorkbookWriter.write(options.output(), result.history(), result.statuses(), LocalDateTime.now());
         } catch (IOException e) {
             err.println(ERROR + "cannot write " + options.output() + ": " + reason(e)
                     + ". If the workbook is open in another program, close it and run again.");
@@ -62,6 +64,7 @@ public final class Main {
         for (String warning : result.warnings()) {
             out.println("warning: " + warning);
         }
+        AnalysisHistory.unmapped(result.history()).forEach(out::println);
         return 0;
     }
 

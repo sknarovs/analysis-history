@@ -59,7 +59,7 @@ jobs:
         run: |
           mkdir smoke && cp "build/native/nativeCompile/analysis-history${EXE}" smoke/
           cd smoke && "./analysis-history${EXE}" ../build/samples -o out.xlsx | tee out.txt
-          test -s out.xlsx && grep -q ", 0 errors" out.txt
+          test -s out.xlsx && grep -q "2 PDFs: 2 tabulated" out.txt && grep -q ", 0 errors" out.txt
       - name: Package
         shell: bash
         run: |
