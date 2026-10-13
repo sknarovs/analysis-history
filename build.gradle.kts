@@ -21,6 +21,8 @@ application { mainClass = "lv.sknarovs.analysishistory.Main" }
 tasks.test {
     useJUnitPlatform()
     systemProperty("java.awt.headless", "true")
+    // RealDataTest reads the real reports from results/ unless -Danalysis.results=<folder> points elsewhere.
+    providers.systemProperty("analysis.results").orNull?.let { systemProperty("analysis.results", it) }
     // PDFBox writes its system-font cache here instead of the home folder, but only if the folder exists. With the
     // bundled font mapper installed first, PDFBox never scans system fonts, so a cache file here fails the build.
     val fontCache = layout.buildDirectory.dir("pdfbox-fontcache").get().asFile
