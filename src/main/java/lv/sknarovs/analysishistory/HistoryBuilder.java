@@ -2,7 +2,6 @@ package lv.sknarovs.analysishistory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,10 +20,10 @@ import lv.sknarovs.analysishistory.ReferenceRange.None;
  * Lays the reports out as the History sheet (spec §4.1): a column per visit, newest first, and a row per test, by
  * section, with every value converted to its row's unit and flagged (§5.5). Pure logic: it reads and writes nothing.
  * <ul>
- * <li><b>Visits.</b> Reports with results are taken in the order they were registered. Each joins the first column of
- * its laboratory and registration date that has none of its tests ({@link RowKey}), or starts a new one, so that two
- * reports of one day with the same test keep both results. Columns are ordered by their latest registration, newest
- * first.
+ * <li><b>Visits.</b> Reports with results are taken in {@link Report#REGISTRATION_ORDER}. Each joins the latest column
+ * of its laboratory and registration date if that column has none of its tests ({@link RowKey}), or starts a new one,
+ * so that two reports of one day with the same test keep both results and each row's results stay in time order.
+ * Columns are ordered by their last report, newest first.
  * <li><b>Rows.</b> One per test that some report has: the catalog's sections in catalog order, then other sections in
  * the order first seen; within a section the catalog's tests in catalog order, then the unmapped tests (unknown to the
  * catalog, or printed in a unit it does not expect) in the order first seen. Results are seen newest visit first, the
@@ -51,9 +50,9 @@ final class HistoryBuilder {
             return match instanceof Matched matched ? matched.factor() : BigDecimal.ONE;
         }
 
-        /** Whether the value is converted into the row's unit, by a factor other than 1. */
+        /** Whether the value is converted into the row's unit: a number, also with a comparator, and a factor not 1. */
         boolean converted() {
-            return factor().compareTo(BigDecimal.ONE) != 0;
+            return !(result.value() instanceof ResultValue.Text) && factor().compareTo(BigDecimal.ONE) != 0;
         }
 
         /** The value in the row's unit. */
@@ -84,10 +83,14 @@ final class HistoryBuilder {
             date = first.registered().toLocalDate();
         }
 
-        /** Whether {@code report} is of this visit's laboratory and day and has none of the visit's tests. */
-        boolean admits(Report report, List<Entry> results) {
-            return report.lab() == lab && report.registered().toLocalDate().equals(date)
-                    && results.stream().noneMatch(entry -> keys.contains(entry.key()));
+        /** Whether {@code report} is of this visit's laboratory and day. */
+        boolean isOf(Report report) {
+            return report.lab() == lab && report.registered().toLocalDate().equals(date);
+        }
+
+        /** Whether the visit has none of the tests of {@code results}. */
+        boolean admits(List<Entry> results) {
+            return results.stream().noneMatch(entry -> keys.contains(entry.key()));
         }
 
         void add(Report report, List<Entry> results) {
@@ -96,9 +99,9 @@ final class HistoryBuilder {
             results.forEach(entry -> keys.add(entry.key()));
         }
 
-        /** The visit's latest registration: its last report's, as reports are added in registration order. */
-        LocalDateTime latest() {
-            return reports.getLast().registered();
+        /** The report added last, which is the latest in {@link Report#REGISTRATION_ORDER}. */
+        Report last() {
+            return reports.getLast();
         }
 
         Visit visit() {
@@ -192,12 +195,17 @@ final class HistoryBuilder {
     private static List<Column> columns(List<Report> reports, TestCatalog catalog) {
         List<Report> registered = reports.stream()
                 .filter(report -> !report.results().isEmpty())
-                .sorted(Comparator.comparing(Report::registered))
+                .sorted(Report.REGISTRATION_ORDER)
                 .toList();
         List<Column> columns = new ArrayList<>();
         for (Report report : registered) {
             List<Entry> results = entries(report, catalog);
-            Column column = columns.stream().filter(candidate -> candidate.admits(report, results)).findFirst()
+            // Only the day's latest column may take the report: an earlier one would then sort as newer than a later
+            // one, and a result could show before a newer result of the same test.
+            Column column = columns.reversed().stream()
+                    .filter(candidate -> candidate.isOf(report))
+                    .findFirst()
+                    .filter(latest -> latest.admits(results))
                     .orElse(null);
             if (column == null) {
                 column = new Column(report);
@@ -205,7 +213,7 @@ final class HistoryBuilder {
             }
             column.add(report, results);
         }
-        columns.sort(Comparator.comparing(Column::latest).reversed());
+        columns.sort(Comparator.comparing(Column::last, Report.REGISTRATION_ORDER).reversed());
         return columns;
     }
 

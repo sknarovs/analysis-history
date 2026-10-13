@@ -71,18 +71,49 @@ class HistoryBuilderTest {
         assertEquals(List.of("146", "150"), values(only(history)));
     }
 
-    @Test void sameDayReportJoinsTheFirstColumnWithoutItsTests() {
+    @Test void sameDayResultsStayInTimeOrder() {
         Report first = report(Lab.EGL, "20000010", "04.02.2019 07:55", blood(CBC, "Hemoglobīns", "150", "g/L", ""));
         Report second = report(Lab.EGL, "20000011", "04.02.2019 08:30", blood(CBC, "Hemoglobīns", "146", "g/L", ""));
-        Report third = report(Lab.EGL, "20000012", "04.02.2019 09:10",
-                result(URINE, Specimen.URINE, "Reakcija pH", "6.0", "", "", Flag.NONE));
+        Report third = report(Lab.EGL, "20000012", "04.02.2019 09:00", blood(CBC, "Leikocīti", "5.40", "10x9/L", ""));
 
         History history = HistoryBuilder.build(List.of(third, second, first), CATALOG);
 
-        // Both columns lack pH; the third report joins the first, which then holds the day's latest registration.
-        assertEquals(List.of("20000010, 20000012", "20000011"), history.visits().stream().map(Visit::numbers).toList());
-        assertEquals(List.of("150", "146"), values(row(history, "Hemoglobīns")));
-        assertEquals(Arrays.asList("6.0", null), values(row(history, "pH")));
+        // The third report joins the day's latest column, the second's; in the first's, 07:55 would show before 08:30.
+        assertEquals(List.of("20000011, 20000012", "20000010"), numbers(history));
+        assertEquals(List.of("146", "150"), values(row(history, "Hemoglobīns")));
+        assertEquals(Arrays.asList("5.40", null), values(row(history, "Leikocīti")));
+    }
+
+    @Test void sameDayReportStartsAColumnWhenTheDaysLatestHasItsTest() {
+        Report first = report(Lab.EGL, "20000010", "04.02.2019 07:55", blood(CBC, "Hemoglobīns", "150", "g/L", ""));
+        Report second = report(Lab.EGL, "20000011", "04.02.2019 08:30", blood(CBC, "Hemoglobīns", "146", "g/L", ""),
+                blood(CBC, "Leikocīti", "5.20", "10x9/L", ""));
+        Report third = report(Lab.EGL, "20000012", "04.02.2019 09:00", blood(CBC, "Leikocīti", "5.40", "10x9/L", ""));
+
+        History history = HistoryBuilder.build(List.of(first, second, third), CATALOG);
+
+        // The first column lacks Leikocīti, but taking the third report would put it before the second's.
+        assertEquals(List.of("20000012", "20000011", "20000010"), numbers(history));
+        assertEquals(Arrays.asList(null, "146", "150"), values(row(history, "Hemoglobīns")));
+        assertEquals(Arrays.asList("5.40", "5.20", null), values(row(history, "Leikocīti")));
+    }
+
+    @Test void reportsRegisteredAtTheSameTimeGoByFileName() {
+        Report first = report(Lab.EGL, "20000010", "04.02.2019 07:55", blood(CBC, "Hemoglobīns", "150", "g/L", ""),
+                blood(CHEMISTRY, "Homocisteīns", "9.8", "µmol/L", ""));
+        Report second = report(Lab.EGL, "20000011", "04.02.2019 07:55", blood(CBC, "Hemoglobīns", "146", "g/L", ""),
+                blood(CHEMISTRY, "HOMOCISTEĪNS", "10.1", "µmol/L", ""));
+        Report urine = report(Lab.EGL, "20000012", "04.02.2019 07:55",
+                result(URINE, Specimen.URINE, "Reakcija pH", "6.0", "", "", Flag.NONE));
+
+        History history = HistoryBuilder.build(List.of(first, second, urine), CATALOG);
+
+        assertEquals(history, HistoryBuilder.build(List.of(urine, second, first), CATALOG));
+        assertEquals(List.of("20000011, 20000012", "20000010"), numbers(history));
+        assertEquals(List.of("146", "150"), values(row(history, "Hemoglobīns")));
+        assertEquals(List.of("10.1", "9.8"), values(row(history, "HOMOCISTEĪNS")));
+        assertEquals("20000011, 20000012", new Visit(Lab.EGL, LocalDate.of(2019, 2, 4), List.of(urine, second))
+                .numbers());
     }
 
     @Test void sameDayReportsOfTwoLabsGetSeparateColumns() {
@@ -140,6 +171,21 @@ class HistoryBuilderTest {
                 row(history, "Hemoglobīns").cells().get(1));
         // pH has no unit: nothing trails the range.
         assertEquals(Arrays.asList(null, "Ref. 4.5–8.0"), notes(row(history, "pH")));
+    }
+
+    @Test void textValueInAConvertedRowGetsNoValueNote() {
+        Report text = report(Lab.CLAB, "100000012", "20.04.2026 10:05",
+                blood(CBC, "Hemoglobīns", "hemolīze", "g/dL", "(13.2 - 17.5)"));
+        Report number = report(Lab.CLAB, "100000011", "17.03.2026 08:20",
+                blood(CBC, "Hemoglobīns", "14.1", "g/dL", "(13.2 - 17.5)"));
+        Report comparator = report(Lab.CLAB, "100000010", "03.02.2026 09:40",
+                blood(CBC, "Hemoglobīns", "<5.0", "g/dL", "(13.2 - 17.5)"));
+
+        HistoryRow row = only(HistoryBuilder.build(List.of(comparator, number, text), CATALOG));
+
+        // Text is shown as printed, nothing converted; a number is converted, also one with a comparator.
+        assertEquals(List.of("hemolīze", "141", "<50"), values(row));
+        assertEquals(Arrays.asList(null, "CLab: 14.1 g/dL", "CLab: <5.0 g/dL"), notes(row));
     }
 
     @Test void sameRangePrintedWithOtherDecimalsGetsNoNote() {
@@ -319,6 +365,10 @@ class HistoryBuilderTest {
     private static HistoryRow row(History history, String name) {
         return history.rows().stream().filter(row -> row.name().equals(name)).findFirst()
                 .orElseThrow(() -> new AssertionError("no row '" + name + "' in " + names(history)));
+    }
+
+    private static List<String> numbers(History history) {
+        return history.visits().stream().map(Visit::numbers).toList();
     }
 
     private static List<String> names(History history) {

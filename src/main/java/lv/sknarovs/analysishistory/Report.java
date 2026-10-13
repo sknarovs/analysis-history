@@ -2,6 +2,7 @@ package lv.sknarovs.analysishistory;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -11,4 +12,7 @@ import java.util.List;
  */
 record Report(Lab lab, String number, LocalDateTime registered, String personalCode, Path file,
         List<String> sections, List<Result> results, List<RowWarning> warnings) {
+    /** The order the laboratories registered the reports in; reports registered at the same time go by file name. */
+    static final Comparator<Report> REGISTRATION_ORDER = Comparator.comparing(Report::registered)
+            .thenComparing(report -> report.file().getFileName().toString());
 }
