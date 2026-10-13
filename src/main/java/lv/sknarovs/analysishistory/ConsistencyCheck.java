@@ -4,7 +4,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import lv.sknarovs.analysishistory.ResultValue.Text;
 
 /**
  * Compares the earlier result each report prints beside a test with what was read from the earlier report, when that
@@ -16,7 +18,10 @@ final class ConsistencyCheck {
     private ConsistencyCheck() {
     }
 
-    /** One warning per printed previous result that differs from every matching earlier report's result. */
+    /**
+     * One warning per printed previous result that differs from every matching earlier report's result (see
+     * {@link #consistent}).
+     */
     static List<String> check(List<Report> reports, TestCatalog catalog) {
         List<Report> ordered = reports.stream().sorted(Report.REGISTRATION_ORDER).toList();
         List<String> warnings = new ArrayList<>();
@@ -38,7 +43,7 @@ final class ConsistencyCheck {
                         continue;
                     }
                     found = true;
-                    if (earlier.get().value().sameAs(previous.value())) {
+                    if (consistent(earlier.get().value(), previous.value())) {
                         differing = null;
                         break;
                     }
@@ -54,6 +59,20 @@ final class ConsistencyCheck {
             }
         }
         return warnings;
+    }
+
+    /**
+     * Whether a printed previous result agrees with the earlier report's value: the same result, or for text the
+     * earlier value's last words, as CLab prints only {@code pozitīvs} for a value printed {@code Rh(D) pozitīvs}.
+     */
+    private static boolean consistent(ResultValue earlier, ResultValue previous) {
+        if (earlier.sameAs(previous)) {
+            return true;
+        }
+        if (earlier instanceof Text value && previous instanceof Text printed) {
+            return value.text().toLowerCase(Locale.ROOT).endsWith(" " + printed.text().toLowerCase(Locale.ROOT));
+        }
+        return false;
     }
 
     private static boolean isPreviousOf(Previous previous, Lab lab, Report other) {

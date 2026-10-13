@@ -76,6 +76,18 @@ class ConsistencyCheckTest {
         assertEquals(List.of(), ConsistencyCheck.check(List.of(later, a, b), CATALOG));
     }
 
+    @Test void textPreviousResultMayBeTheLastWordsOfTheEarlierValue() {
+        Report earlier = report(Lab.CLAB, "old.pdf", LocalDateTime.of(2025, 11, 3, 9, 12), "Rh(D) pozitīvs", null);
+        Report later = report(Lab.CLAB, "new.pdf", LocalDateTime.of(2026, 1, 5, 8, 0), "Rh(D) pozitīvs",
+                previous("Pozitīvs", LocalDate.of(2025, 11, 3), LocalTime.of(9, 12)));
+        Report partWord = report(Lab.CLAB, "part.pdf", LocalDateTime.of(2026, 1, 5, 8, 0), "Rh(D) pozitīvs",
+                previous("tīvs", LocalDate.of(2025, 11, 3), LocalTime.of(9, 12)));
+
+        assertEquals(List.of(), ConsistencyCheck.check(List.of(later, earlier), CATALOG));
+        assertEquals(List.of("part.pdf: Hemoglobīns previous result tīvs (03.11.2025) differs from Rh(D) pozitīvs"
+                + " in old.pdf"), ConsistencyCheck.check(List.of(partWord, earlier), CATALOG));
+    }
+
     private static Previous previous(String value, LocalDate date, LocalTime time) {
         return new Previous(ResultValue.parse(value), date, time);
     }
