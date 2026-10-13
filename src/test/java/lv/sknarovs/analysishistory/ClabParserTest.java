@@ -111,6 +111,37 @@ class ClabParserTest {
         assertEquals(List.of(), report.warnings());
     }
 
+    @Test void rowsThirteenPointsBelowAResultAreResultsOfTheirOwn() throws ReportFormatException {
+        Report report = parse("clab-tight");
+
+        assertEquals(List.of("Protrombīns", "INR", "APTL", "Kreatinīns", "Glomerulārās filtrācijas ātrums",
+                "Bilirubīns urīnā", "Krāsa", "Dzidrums", "Koronavīrusa 2019-nCoV RNS noteikšana"), names(report));
+        assertEquals(new Numeric(new BigDecimal("88.0"), 1), result(report, "Kreatinīns").value());
+        Result filtration = result(report, "Glomerulārās filtrācijas ātrums");
+        assertEquals(new Numeric(new BigDecimal("93"), 0), filtration.value());
+        assertEquals("mL/min/1.73 m2", filtration.unit());
+        assertEquals(new Text("Negatīvs"), result(report, "Bilirubīns urīnā").value());
+        assertEquals(new Text("Dzeltena"), result(report, "Krāsa").value());
+        assertEquals(Specimen.URINE, result(report, "Dzidrums").specimen());
+        assertEquals(new Text("Dzidrs"), result(report, "Dzidrums").value());
+    }
+
+    @Test void noteWithACellInTheRangeColumnIsSkipped() throws ReportFormatException {
+        Report report = parse("clab-tight");
+
+        assertEquals(new Numeric(new BigDecimal("0.98"), 2), result(report, "INR").value());
+        assertEquals(new None(), result(report, "INR").range());
+        assertEquals(List.of(), report.warnings());
+    }
+
+    @Test void rightAlignedTextValuesMayStartLeftOfTheValueColumn() throws ReportFormatException {
+        Report report = parse("clab-tight");
+
+        Result covid = result(report, "Koronavīrusa 2019-nCoV RNS noteikšana");
+        assertEquals(new Text("IR ATRASTA koronavīrusa SARS-CoV-2 RNS"), covid.value());
+        assertEquals(new TextReference("nav atrasta"), covid.range());
+    }
+
     @Test void urineGroupContinuesOnPageWithoutHeader() throws ReportFormatException {
         Report report = parse("clab-urine");
 

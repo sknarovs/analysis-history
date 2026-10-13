@@ -27,6 +27,17 @@ class FixturesTest {
                 pages);
     }
 
+    @Test void rowStartingWithPlusIsThirteenPointsBelow() {
+        List<Page> pages = Fixtures.parse("""
+                46:Kreatinīns
+                +49:Glomerulārās
+                ~49:ātrums
+                """);
+
+        assertEquals(List.of(60f, 73f, 85f), pages.get(0).rows().stream().map(Row::baseline).toList());
+        assertEquals("Glomerulārās", pages.get(0).rows().get(1).first().text());
+    }
+
     @Test void pageMarkerBeforeTheFirstRowStartsPageOne() {
         List<Page> pages = Fixtures.parse("""
                 === page

@@ -22,9 +22,11 @@ import lv.sknarovs.analysishistory.Zones.Zone;
  * <li>a bold line of one cell from x 150 on is a section, and ends the group;
  * <li>a line of one cell that ends before the value column is a group, such as {@code Leikocitārā formula}; it lasts
  * across pages until the next section or group;
- * <li>a result starts at a row with a name in the name column and a value; the lines up to 14 pt below its last line
+ * <li>a result starts at a row with a name in the name column and a value; the lines up to 12.5 pt below its last line
  * wrap its name, value, unit or previous result, bold or not;
- * <li>a line of one cell that starts in the name column and runs on into the value column is a note, and is skipped.
+ * <li>a line whose first cell starts in the name column and runs on into the value column is a note, and is skipped;
+ * <li>text values are right-aligned under {@code Rezultāts}, so a long one may start a few points left of the value
+ * column: a cell that starts at most {@link #VALUE_OVERHANG} left of it and runs on into it is a value.
  * </ul>
  * Before the first column header only sections are read, so a report without one (microbiology) has no results. A
  * {@link RowWarning} reports any other row with text right of the name column, a row below a page's first footer row
@@ -52,8 +54,13 @@ final class ClabParser {
     private static final float NUMBER_X = 297;
     /** Sections start at this x or right of it; groups start further left. */
     private static final float SECTION_X = 150;
-    /** A line at most this many points below a result's last line wraps it; CLab prints wrapped lines 12 pt apart. */
-    private static final float WRAP_GAP = 14;
+    /**
+     * A line at most this many points below a result's last line wraps it; CLab prints wrapped lines 12 pt apart and
+     * the rows of a table 13 pt apart, so a row of its own that prints no range (eGFR below creatinine) is not taken in.
+     */
+    private static final float WRAP_GAP = 12.5f;
+    /** A text value may start this many points left of the value column (CLab's start up to about 9 pt left of it). */
+    private static final float VALUE_OVERHANG = 20;
 
     private final List<String> sections = new ArrayList<>();
     private final List<Result> results = new ArrayList<>();
@@ -135,12 +142,14 @@ final class ClabParser {
 
     /**
      * Reads a row below the first header that wraps no result: a group title, the start of a result, or a row that
-     * belongs to nothing, reported when it has text right of the name column. A note has none there, and is skipped.
+     * belongs to nothing, reported when it has text right of the name column. A note ({@link #isNote}) is skipped.
      */
     private void readLine(int page, Row row) {
         Cell first = row.first();
         if (isOneCellInNameColumn(row) && first.xEnd() < zones.value()) {
             group = first.text();
+        } else if (isNote(row)) {
+            return;
         } else if (startsResult(row)) {
             open = new OpenResult(page, row, section, group, specimen(), zones);
         } else if (reachesResultColumns(row)) {
@@ -161,9 +170,12 @@ final class ClabParser {
         return inNameColumn(row.first()) && prints(row, Field.VALUE);
     }
 
-    /** A note: one cell that starts in the name column and runs on into the value column, as sentences do. */
+    /**
+     * A note: its first cell starts in the name column and runs on into the value column, as sentences do; a cell may
+     * follow it, such as the end of the INR note in the range column.
+     */
     private boolean isNote(Row row) {
-        return isOneCellInNameColumn(row) && row.first().xEnd() >= zones.value();
+        return inNameColumn(row.first()) && row.first().xEnd() >= zones.value();
     }
 
     private boolean isOneCellInNameColumn(Row row) {
@@ -171,7 +183,19 @@ final class ClabParser {
     }
 
     private boolean inNameColumn(Cell cell) {
-        return zones.of(cell.x()) == Zone.NAME;
+        return zone(cell, zones) == Zone.NAME;
+    }
+
+    /**
+     * The zone {@code cell} is in: the one it starts in, except that a cell starting at most {@link #VALUE_OVERHANG}
+     * left of the value column and running on into it is a right-aligned value.
+     */
+    private static Zone zone(Cell cell, Zones zones) {
+        Zone zone = zones.of(cell.x());
+        if (zone == Zone.NAME && cell.x() >= zones.value() - VALUE_OVERHANG && cell.xEnd() > zones.value()) {
+            return Zone.VALUE;
+        }
+        return zone;
     }
 
     /** Whether any cell of {@code row} starts right of the name column, where values, units and ranges go. */
@@ -284,10 +308,10 @@ final class ClabParser {
     /**
      * What {@code cell} holds. In the name column it is part of the name. Right of it, its shape decides first: an
      * arrow is the flag (CLab prints it where the unit column starts), a date and time is the previous result's
-     * date, and text in parentheses is the range; any other text belongs to the zone it starts in.
+     * date, and text in parentheses is the range; any other text belongs to its zone (see {@link #zone}).
      */
     private static Field field(Cell cell, Zones zones) {
-        Zone zone = zones.of(cell.x());
+        Zone zone = zone(cell, zones);
         String text = cell.text();
         if (zone != Zone.NAME) {
             if (ARROWS.containsKey(text)) {

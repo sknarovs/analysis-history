@@ -11,12 +11,14 @@ import java.util.List;
  * Loads text fixtures that describe PDF pages the way {@link PdfText} reads them. UTF-8; {@code #} lines and blank
  * lines are ignored; {@code === page} starts a new page. Every other line is one row of cells separated by
  * {@code " | "}, each written {@code x:text}, or {@code x:*text} for a bold cell. A row starting with {@code ~} is a
- * wrapped line 12 pt below the previous row; other rows are 18 pt below it, and a page's first row is at baseline 60.
+ * wrapped line 12 pt below the previous row, one starting with {@code +} is 13 pt below it (the next row of a CLab
+ * table printed at single spacing); other rows are 18 pt below it, and a page's first row is at baseline 60.
  */
 final class Fixtures {
     private static final float FIRST_BASELINE = 60;
     private static final float ROW_STEP = 18;
     private static final float WRAPPED_STEP = 12;
+    private static final float TIGHT_STEP = 13;
     /** Loaded cells are this many points wide per character. */
     private static final float CHAR_WIDTH = 5;
 
@@ -55,9 +57,13 @@ final class Fixtures {
             if (rows == null) {
                 rows = new ArrayList<>();
             }
-            boolean wrapped = line.startsWith("~");
-            baseline = rows.isEmpty() ? FIRST_BASELINE : baseline + (wrapped ? WRAPPED_STEP : ROW_STEP);
-            rows.add(new Row(baseline, cells(wrapped ? line.substring(1) : line)));
+            float step = switch (line.charAt(0)) {
+                case '~' -> WRAPPED_STEP;
+                case '+' -> TIGHT_STEP;
+                default -> ROW_STEP;
+            };
+            baseline = rows.isEmpty() ? FIRST_BASELINE : baseline + step;
+            rows.add(new Row(baseline, cells(step == ROW_STEP ? line : line.substring(1))));
         }
         if (rows != null) {
             pages.add(new Page(pages.size() + 1, rows));
