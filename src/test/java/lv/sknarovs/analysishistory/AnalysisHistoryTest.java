@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -190,10 +188,7 @@ class AnalysisHistoryTest {
 
     /** Renders fixture {@code name} into {@code dir/file} after replacing each pair of texts. */
     static void render(Path dir, String name, String file, String... replacements) throws IOException {
-        String text;
-        try (InputStream in = AnalysisHistoryTest.class.getResourceAsStream("/fixtures/" + name + ".txt")) {
-            text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String text = Fixtures.text(name);
         for (int i = 0; i < replacements.length; i += 2) {
             if (!text.contains(replacements[i])) {
                 throw new IllegalArgumentException("'" + replacements[i] + "' not in " + name);

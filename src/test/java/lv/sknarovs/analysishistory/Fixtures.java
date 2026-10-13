@@ -27,12 +27,17 @@ final class Fixtures {
 
     /** Reads {@code fixtures/<name>.txt} from the test resources. */
     static List<Page> load(String name) {
+        return parse(text(name));
+    }
+
+    /** The text of {@code fixtures/<name>.txt} with line ends normalised to {@code \n}, however it was checked out. */
+    static String text(String name) {
         String resource = "/fixtures/" + name + ".txt";
         try (InputStream in = Fixtures.class.getResourceAsStream(resource)) {
             if (in == null) {
                 throw new IllegalArgumentException("no fixture " + resource);
             }
-            return parse(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n", "\n");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

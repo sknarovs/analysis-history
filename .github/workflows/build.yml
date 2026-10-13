@@ -38,6 +38,9 @@ jobs:
             runs-on: macos-15
     env:
       EXE: ${{ matrix.exe }}
+      # The Debian container has no UTF-8 locale, so file names with Latvian letters would not encode.
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     steps:
       - name: Install native toolchain
         if: matrix.container
