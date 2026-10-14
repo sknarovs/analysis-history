@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lv.sknarovs.analysishistory.catalog.TestCatalog;
 
 /**
  * Reads E. Gulbja Laboratorija's own history export ({@code rezultatu_vesture_*.html}), the oracle the real-data

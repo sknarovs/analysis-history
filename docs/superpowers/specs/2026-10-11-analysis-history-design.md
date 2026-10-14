@@ -129,7 +129,7 @@ WorkbookWriter (fastexcel) → <DIR>/analysis-history.xlsx (temp file, then rena
 
 Every run reads all PDFs and rewrites the workbook. Nothing is stored between runs.
 
-### Components (package `lv.sknarovs.analysishistory`)
+### Components (packages under `lv.sknarovs.analysishistory`, see AGENTS.md)
 
 | Unit | Responsibility | Uses |
 |---|---|---|
@@ -319,7 +319,7 @@ the arrow (its HTML export shows it).
 
 ### 5.6 Catalog
 
-`src/main/resources/lv/sknarovs/analysishistory/catalog.txt`, UTF-8, one line per test:
+`src/main/resources/lv/sknarovs/analysishistory/catalog/catalog.txt`, UTF-8, one line per test:
 
 ```
 # <display name> | <unit> | <lab>: <name as printed> [<printed unit> ×<factor>] | …
@@ -452,7 +452,7 @@ build.gradle.kts, settings.gradle.kts, gradlew, gradle/
 docs/superpowers/specs/2026-10-11-analysis-history-design.md
 docs/superpowers/plans/…
 src/main/java/lv/sknarovs/analysishistory/…
-src/main/resources/lv/sknarovs/analysishistory/catalog.txt
+src/main/resources/lv/sknarovs/analysishistory/catalog/catalog.txt
 src/main/resources/META-INF/native-image/lv.sknarovs/analysis-history/…
 src/test/java/lv/sknarovs/analysishistory/…
 src/test/resources/fixtures/…

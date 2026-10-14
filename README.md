@@ -53,7 +53,7 @@ It prints one summary line, then any warnings and the tests that are not in the 
 ## Adding a test alias
 
 A test the catalog does not know appears as its own row, marked in a cell note. To merge it with the same test from the
-other laboratory, edit `src/main/resources/lv/sknarovs/analysishistory/catalog.txt` (UTF-8):
+other laboratory, edit `src/main/resources/lv/sknarovs/analysishistory/catalog/catalog.txt` (UTF-8):
 
 ```
 # <display name> | <unit> | <lab>: <name as printed> [<printed unit> ×<factor>] | …

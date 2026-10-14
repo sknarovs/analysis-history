@@ -8,6 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.time.LocalDateTime;
 import lv.sknarovs.analysishistory.AnalysisHistory.RunResult;
+import lv.sknarovs.analysishistory.catalog.TestCatalog;
+import lv.sknarovs.analysishistory.model.ReportStatus;
+import lv.sknarovs.analysishistory.workbook.WorkbookWriter;
 
 /** Turns the laboratory reports in a folder into one Excel workbook of results over time. */
 public final class Main {
@@ -58,7 +61,7 @@ public final class Main {
                     + ". If the workbook is open in another program, close it and run again.");
             return 1;
         }
-        out.println("Read " + AnalysisHistory.summary(result.statuses()) + "; " + result.warnings().size()
+        out.println("Read " + ReportStatus.summary(result.statuses()) + "; " + result.warnings().size()
                 + " warnings");
         out.println("Wrote " + options.output());
         for (String warning : result.warnings()) {

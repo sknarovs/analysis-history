@@ -3,6 +3,8 @@ package lv.sknarovs.analysishistory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import lv.sknarovs.analysishistory.pdf.FixturePdf;
+import lv.sknarovs.analysishistory.pdf.Fixtures;
 
 /**
  * Writes an EGL-like and a CLab-like sample report, rendered from the {@code egl-sample} and {@code clab-sample}
