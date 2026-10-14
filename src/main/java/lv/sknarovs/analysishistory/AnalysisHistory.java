@@ -3,7 +3,6 @@ package lv.sknarovs.analysishistory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -13,9 +12,22 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lv.sknarovs.analysishistory.catalog.TestCatalog;
+import lv.sknarovs.analysishistory.history.ConsistencyCheck;
+import lv.sknarovs.analysishistory.history.History;
+import lv.sknarovs.analysishistory.history.HistoryBuilder;
+import lv.sknarovs.analysishistory.history.HistoryRow;
+import lv.sknarovs.analysishistory.model.Lab;
+import lv.sknarovs.analysishistory.model.Report;
+import lv.sknarovs.analysishistory.model.ReportFormatException;
+import lv.sknarovs.analysishistory.model.ReportStatus;
+import lv.sknarovs.analysishistory.parser.ClabParser;
+import lv.sknarovs.analysishistory.parser.EglParser;
+import lv.sknarovs.analysishistory.parser.LabDetector;
+import lv.sknarovs.analysishistory.pdf.Page;
+import lv.sknarovs.analysishistory.pdf.PdfText;
 
 /**
  * Reads every PDF directly in a folder (spec §7): each is read, its laboratory detected and its report parsed, and
@@ -23,11 +35,6 @@ import java.util.stream.Stream;
  * every warning that concerns one report counts towards that report's status.
  */
 final class AnalysisHistory {
-    /** What became of one PDF; {@code lab}, {@code number} and {@code registered} are null when unknown. */
-    record ReportStatus(Path file, Lab lab, String number, LocalDateTime registered, int results, String status,
-            List<String> warnings) {
-    }
-
     /** The History sheet, one status per PDF in file-name order, and the warnings of the whole run. */
     record RunResult(History history, List<ReportStatus> statuses, List<String> warnings) {
     }
@@ -80,19 +87,6 @@ final class AnalysisHistory {
                 .map(read -> status(read, duplicates.get(read.fileName()), perReport.getOrDefault(read.fileName(), List.of())))
                 .toList();
         return new RunResult(history, statuses, List.copyOf(warnings));
-    }
-
-    /**
-     * Counts the statuses: {@code "<n> PDFs: <a> tabulated, <b> not tabulated, <c> unrecognised, <d> duplicates,
-     * <e> errors"}.
-     */
-    static String summary(List<ReportStatus> statuses) {
-        return statuses.size() + " PDFs: "
-                + count(statuses, status -> status.startsWith("OK")) + " tabulated, "
-                + count(statuses, status -> status.startsWith("Not tabulated")) + " not tabulated, "
-                + count(statuses, status -> status.equals("Unrecognised")) + " unrecognised, "
-                + count(statuses, status -> status.startsWith("Duplicate of")) + " duplicates, "
-                + count(statuses, status -> status.startsWith("Error:")) + " errors";
     }
 
     /** One console line per unmapped row of {@code history} (spec §5.6), naming the laboratories that print it. */
@@ -217,9 +211,5 @@ final class AnalysisHistory {
         }
         return new ReportStatus(read.file(), report.lab(), report.number(), report.registered(), results, status,
                 List.copyOf(warnings));
-    }
-
-    private static long count(List<ReportStatus> statuses, Predicate<String> matches) {
-        return statuses.stream().map(ReportStatus::status).filter(matches).count();
     }
 }

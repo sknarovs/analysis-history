@@ -20,21 +20,26 @@ history, shipped as a GraalVM native binary. Design: `docs/superpowers/specs/202
 
 - **Java 25, Gradle (Kotlin DSL), GraalVM Native Build Tools.** Runtime dependencies: only PDFBox 3.0.8 and fastexcel
   0.20.2. Compile-only: `org.graalvm.sdk:nativeimage`. Each dependency must work in a native image.
-- Flat package `lv.sknarovs.analysishistory` (`src/main/java/...`), classes package-private unless needed:
-  - `Main` / `CliOptions` - `analysis-history [-h] [-o FILE] [DIR]`; exit 0 written, 1 nothing written, 2 usage error.
+- Packages under `lv.sknarovs.analysishistory` (`src/main/java/...`), one per responsibility. Dependencies point one way
+  only (`pdf`, `model` <- `parser`, `catalog` <- `history` <- `workbook` <- root); keep it acyclic. Types and members are
+  public only when another package uses them; helpers stay package-private. Tests live in the package of the class they test.
+  - root: `Main` / `CliOptions` - `analysis-history [-h] [-o FILE] [DIR]`; exit 0 written, 1 nothing written, 2 usage error.
     Console output uses plain `System.out`/`System.err` (the console's `stdout.encoding`); do not wrap it in a UTF-8 stream.
-  - `AnalysisHistory` - the run: reads each PDF independently, statuses, duplicates, warnings, summary line.
-  - `PdfText` - the only class using PDFBox: glyphs to rows (vertical overlap, joins CLab's two baselines) to cells (gaps).
-    `BundledFontMapper` - maps non-embedded fonts to the bundled LiberationSans so extraction is identical everywhere,
-    system fonts are never scanned and no `~/.pdfbox.cache` is written.
-  - `LabDetector` (from text, never from file names), `EglParser`, `ClabParser` - one lab's layout to `Report`; they know
-    nothing about Excel or each other. Row-level problems become `RowWarning`s.
-  - `ResultValue`, `ReferenceRange`, `Flag`, `Decimals` - values, ranges, flag rules (spec 5.5).
-  - `TestCatalog`, `CatalogTest`, `CatalogMatch` - load `catalog.txt` and map (lab, specimen, name, unit) to a catalog test
-    with a conversion factor.
-  - `HistoryBuilder` -> `History` (visits newest first x rows by section), `ConsistencyCheck` (printed previous results
-    against earlier reports), `WorkbookWriter` - the only class using fastexcel; writes a temp file, then renames.
-  - `NoAwtSubstitutions` - see below.
+    `AnalysisHistory` - the run: reads each PDF independently, statuses, duplicates, warnings.
+  - `pdf`: `PdfText` - the only class using PDFBox: glyphs to rows (vertical overlap, joins CLab's two baselines) to cells
+    (gaps), as `Page` / `Row` / `Cell`. `BundledFontMapper` - maps non-embedded fonts to the bundled LiberationSans so
+    extraction is identical everywhere, system fonts are never scanned and no `~/.pdfbox.cache` is written.
+    `NoAwtSubstitutions` - see below.
+  - `model`: what a report says - `Lab`, `Specimen`, `Report`, `Result`, `Previous`, `RowWarning`, `ReportFormatException`;
+    `ResultValue`, `ReferenceRange`, `Flag`, `Decimals` - values, ranges, flag rules (spec 5.5); `ReportStatus` - what
+    became of one PDF, and the summary line.
+  - `parser`: `LabDetector` (from text, never from file names), `EglParser`, `ClabParser` - one lab's layout to `Report`;
+    they know nothing about Excel or each other. Row-level problems become `RowWarning`s. `Zones`, `WrappedText` are helpers.
+  - `catalog`: `TestCatalog`, `CatalogTest`, `CatalogMatch` - load `catalog.txt` (in the same resource package) and map
+    (lab, specimen, name, unit) to a catalog test with a conversion factor.
+  - `history`: `HistoryBuilder` -> `History` (`Visit`s newest first x `HistoryRow`s by section, keyed by `RowKey`),
+    `ConsistencyCheck` (printed previous results against earlier reports).
+  - `workbook`: `WorkbookWriter` - the only class using fastexcel; writes a temp file, then renames.
 - **Native build arguments** in `build.gradle.kts`: `-Djava.awt.headless=true`, `-H:+AddAllCharsets` (PDFBox otherwise
   falls back from Windows-1252 and logs a stack trace), `-march=compatibility` (portable across CPUs). `-Pstatic` adds
   `--static --libc=musl`. Keep them.
@@ -43,7 +48,7 @@ history, shipped as a GraalVM native binary. Design: `docs/superpowers/specs/202
   `libawt` and `libjvm`. Native Image still writes `libawt.so`/`awt.dll` beside the executable; releases ship only the executable.
 - Reachability metadata for what the metadata repository lacks (commons-logging) is in
   `src/main/resources/META-INF/native-image/lv.sknarovs/analysis-history/`, generated with the tracing agent, AWT entries removed.
-- **Catalog** (`src/main/resources/lv/sknarovs/analysishistory/catalog.txt`): `[Section]` headers; lines
+- **Catalog** (`src/main/resources/lv/sknarovs/analysishistory/catalog/catalog.txt`): `[Section]` headers; lines
   `<display name> | <unit> | <Lab>: <printed name> [<printed unit> ×<factor>] | ...` (square brackets, because printed names
   contain parentheses). A section implies the specimen. Names are normalised (case, whitespace, spaces around `-` and `,`);
   the printed unit must equal the alias's unit (or the row's) after normalising, else the result is not merged and a warning
@@ -56,7 +61,8 @@ history, shipped as a GraalVM native binary. Design: `docs/superpowers/specs/202
 ## Testing
 
 - JUnit 6 in `src/test/java`; parsers are tested from fixtures, the text layer from PDFs generated with PDFBox
-  (`TestPdf`, `FixturePdf`), workbooks are read back with `java.util.zip` + `javax.xml` so tests also run as a native image.
+  (`pdf.TestPdf`, `pdf.FixturePdf`, `pdf.Fixtures`), workbooks are read back by `workbook.XlsxReader`
+  (`java.util.zip` + `javax.xml`) so tests also run as a native image.
   `SampleReports` generates the PDFs for end-to-end tests and the CI smoke run.
 - `RealDataTest` is opt-in: it runs only with `./gradlew test -Danalysis.results=<folder>` (e.g. `results/`) and is skipped
   otherwise, so no real data is read by default: all
